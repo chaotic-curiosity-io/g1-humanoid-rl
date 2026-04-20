@@ -1,0 +1,46 @@
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+.netrc
+.git-credentials
+
+# Generated caches
+wandb-cache/
+warp-cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# Checkpoints and motion artifacts (reproducible)
+logs/
+**/model_*.pt
+**/*.onnx
+**/motion.npz
+**/*.npz
+**/*.mp4
+**/*.gif
+
+# Large downloads (reproducible per setup-notes.md)
+mjlab/
+pose-pipeline/assets/
+pose-pipeline/repos/
+pose-pipeline/motions/
+pose-pipeline/outputs/
+pose-pipeline/inputs/
+pose-pipeline/.venv/
+
+# Pasted/local screenshots
+Pasted image*.png
+Screenshot*.png
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
