@@ -17,7 +17,9 @@
 - Baseline run dir (reuse, never overwrite): `logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/` (paths relative to `/workspace/mjlab`).
 - Baseline reference curve (for reproducibility claims): iter 500→3.30, 900→21.30, 1400→31.47, 2050→50.51 reward; ep length 173→962→925→995.
 - Both experiments share `experiment_name=g1_velocity`; disambiguate via `--agent.run-name`. Tag fresh runs `arc-control` and `arc-tweak-slow`.
-- Tweak = single knob: `--env.commands.twist.ranges.lin-vel-x -0.5 0.5` (control keeps the default `-1.0 1.0`); all else identical incl. seed 42.
+- Tweak = single knob (forward-speed range `lin_vel_x`). **The Flat task runs a `command_vel` curriculum whose stage-0 fires at step 0** (confirmed in Task 1), so a plain range override is clobbered back to `(-1,1)` on the first reset. The tweak MUST override the command range AND all three curriculum stages, using tyro's `=` tuple syntax (space-separated values are rejected):
+  `"--env.commands.twist.ranges.lin-vel-x=(-0.5, 0.5)"` + `"--env.curriculum.command-vel.params.velocity-stages.{0,1,2}.lin-vel-x=(-0.5, 0.5)"`.
+  **Control needs NO range flags** — its curriculum stays at stage 0 = `(-1.0, 1.0)` for all iters <5000, so a 1500-iter control run reproduces the baseline faithfully. Both keep seed 42; only `lin_vel_x` differs.
 - Headline metric tags: `Train/mean_reward`, `Train/mean_episode_length`. Reward-term tags are `Episode_Reward/*`; terminations `Episode_Termination/{fell_over,time_out}`.
 - Commit cadence: one commit per task on branch `g1-walking-learning-arc`. Commit messages end with the two trailers used in the repo (Co-Authored-By + Claude-Session).
 - Reports written for a reader with **zero** robotics/ML background: define every term on first use; commands shown so they can re-run; each ends with a "tweak this to explore" section.
@@ -358,11 +360,21 @@ Identical recipe, one knob changed. Then restore the host regardless of outcome.
 - Consumes: quiesced host from Task 4 (still quiesced — do NOT restore between runs).
 - Produces: `logs/rsl_rl/g1_velocity/<tweak_ts>/` (record `TWEAK_DIR`).
 
-- [ ] **Step 1: Launch the tweak run detached**
+- [ ] **Step 1: Write the tweak launch script (avoids nested-quote breakage) + run it detached**
 
-Run:
+The 4-flag override has parentheses and spaces; pushing it through ssh→docker→bash→tyro inline is fragile. Write it to a script on the bind mount (`~/robotic-simulation` = container `/workspace`) and run that:
 ```bash
-ssh spark 'docker exec -d mjlab-dev bash -lc "cd /workspace/mjlab && MUJOCO_GL=egl CUDA_VISIBLE_DEVICES=0 python -u -m mjlab.scripts.train Mjlab-Velocity-Flat-Unitree-G1 --env.scene.num-envs 2048 --agent.max-iterations 1500 --agent.run-name arc-tweak-slow --env.commands.twist.ranges.lin-vel-x -0.5 0.5 > /workspace/logs/arc-tweak.log 2>&1"'
+ssh spark 'cat > /home/chaotic-curiosity/robotic-simulation/arc-tweak.sh' <<'SH'
+cd /workspace/mjlab
+MUJOCO_GL=egl CUDA_VISIBLE_DEVICES=0 python -u -m mjlab.scripts.train \
+  Mjlab-Velocity-Flat-Unitree-G1 \
+  --env.scene.num-envs 2048 --agent.max-iterations 1500 --agent.run-name arc-tweak-slow \
+  "--env.commands.twist.ranges.lin-vel-x=(-0.5, 0.5)" \
+  "--env.curriculum.command-vel.params.velocity-stages.0.lin-vel-x=(-0.5, 0.5)" \
+  "--env.curriculum.command-vel.params.velocity-stages.1.lin-vel-x=(-0.5, 0.5)" \
+  "--env.curriculum.command-vel.params.velocity-stages.2.lin-vel-x=(-0.5, 0.5)"
+SH
+ssh spark 'docker exec -d mjlab-dev bash -lc "bash /workspace/arc-tweak.sh > /workspace/logs/arc-tweak.log 2>&1"'
 ssh spark 'docker exec mjlab-dev bash -lc "sleep 20; pgrep -f mjlab.scripts.train && tail -5 /workspace/logs/arc-tweak.log"'
 ```
 Expected: started; log shows training begun.
@@ -373,9 +385,9 @@ Expected: started; log shows training begun.
 
 Run:
 ```bash
-ssh spark 'docker exec mjlab-dev bash -lc "cd /workspace/mjlab && d=\$(grep -l arc-tweak-slow logs/rsl_rl/g1_velocity/*/params/agent.yaml | xargs -n1 dirname); echo TWEAK_DIR=\$d; grep -A1 lin_vel_x \$d/params/env.yaml | head; ls \$d/model_*.pt | wc -l"'
+ssh spark 'docker exec mjlab-dev bash -lc "cd /workspace/mjlab && d=\$(ls -d logs/rsl_rl/g1_velocity/*_arc-tweak-slow | tail -1); echo TWEAK_DIR=\$d; echo \"lin_vel_x = -0.5 count (want 4):\"; grep -A1 lin_vel_x \$d/params/env.yaml | grep -c -- \"- -0.5\"; ls \$d/model_*.pt | wc -l"'
 ```
-Expected: `TWEAK_DIR=…`; `lin_vel_x` dumped as `(-0.5, 0.5)` (confirms the knob); ~30 checkpoints.
+Expected: `TWEAK_DIR=…`; the `-0.5` count is **4** (command range + 3 curriculum stages all pinned — confirms the knob held); ~30 checkpoints.
 
 - [ ] **Step 4: Restore the host (ALWAYS — even if a run failed)**
 
