@@ -58,6 +58,7 @@ def plot_tag(runs: dict[str, dict], tag: str, out_png: Path) -> bool:
     for name, scalars in runs.items():
         series = scalars.get(tag)
         if not series:
+            print(f"WARNING: tag {tag!r} not in run {name!r}, skipping")
             continue
         xs = [s for s, _ in series]
         ys = [v for _, v in series]
@@ -89,7 +90,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", action="append", required=True,
                     help="run dir, optionally name=dir; repeatable to overlay")
-    ap.add_argument("--tags", nargs="*",
+    ap.add_argument("--tags", nargs="+",
                     default=["Train/mean_reward", "Train/mean_episode_length"])
     ap.add_argument("--out", required=True, help="output directory")
     args = ap.parse_args()
