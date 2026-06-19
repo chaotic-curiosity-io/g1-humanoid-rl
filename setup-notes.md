@@ -102,6 +102,31 @@ Environment setup + baseline training for the mjlab G1 velocity demo went cleanl
 - Best checkpoint: `~/robotic-simulation/mjlab/logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/model_2050.pt`
 - Container `mjlab-dev` has everything installed and ready.
 
+## 2026-06-18 — Session 2 (pre-run recon)
+
+### Findings
+
+- **Progression script CLI**: `python -m mjlab.scripts.record_learning_progression <TASK> --help` loads cleanly with tyro. Confirmed flags: `--run-dir`, `--num-checkpoints`, `--cameras`, `--command-lin-vel-x`. Requires the task name as a positional arg before `--help`.
+- **Control smoke (64 envs, 3 iters)**: Completed successfully. Iteration time at 64 envs: ~0.4–0.7 s/iter (kernel JIT warms up after iter 0). At 2048 envs (Session 1 baseline) this is ~1.25 s/iter — consistent.
+- **Velocity-range override — CURRICULUM CLOBBER (resolved)**:
+  - `--env.commands.twist.ranges.lin-vel-x=(-0.5, 0.5)` alone does NOT stick. The `commands_vel` curriculum function fires at every episode boundary; its stage 0 (`step: 0`) always applies and resets `lin_vel_x = (-1.0, 1.0)`.
+  - **Fix**: must override all three curriculum stages via CLI in addition to the command range. Working invocation:
+    ```bash
+    "--env.commands.twist.ranges.lin-vel-x=(-0.5, 0.5)" \
+    "--env.curriculum.command-vel.params.velocity-stages.0.lin-vel-x=(-0.5, 0.5)" \
+    "--env.curriculum.command-vel.params.velocity-stages.1.lin-vel-x=(-0.5, 0.5)" \
+    "--env.curriculum.command-vel.params.velocity-stages.2.lin-vel-x=(-0.5, 0.5)"
+    ```
+  - Verified: `params/env.yaml` in the saved run shows `(-0.5, 0.5)` at both `commands.twist.ranges.lin_vel_x` and all three `curriculum.command_vel.velocity_stages[*].lin_vel_x`. Override confirmed good.
+  - Note: tuple args must be passed with `=` syntax (e.g. `--flag=(-0.5, 0.5)`) — space-separated positional values are rejected by tyro as "Unrecognized options".
+- **Tooling confirmed in container**: matplotlib 3.10.8, pandas 3.0.1, tensorboard present.
+- **Tensorboard scalar tags**: 39 tags total. Reward-relevant: `Train/mean_reward`, `Episode_Reward/track_linear_velocity`, `Episode_Reward/track_angular_velocity`, and 12 others. Full tag list confirmed via `EventAccumulator` on the baseline run dir.
+- **Baseline intact**: `logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/` untouched — 42 `.pt` files present after cleanup.
+
+### Session 2 summary
+
+Smoke tests confirm the Spark stack is ready. The critical finding is that the velocity-range override requires patching all three curriculum stages, not just the command range. Tasks 3–5 must use the 4-flag form above for any `lin_vel_x` override.
+
 ### Next session: sprinter tweak + playback
 
 1. Restart co-tenant quiescence (docker stop + sudo systemctl stop comfyui + sudo swapoff -a) and kill the idle mjlab-dev training if any.
