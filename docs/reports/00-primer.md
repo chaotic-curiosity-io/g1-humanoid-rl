@@ -12,7 +12,7 @@ We train in simulation — specifically in **MuJoCo** (short for Multi-Joint dyn
 
 1. **Speed.** A simulated robot can run at many times real speed. What would take weeks of physical practice can happen in hours on a fast computer.
 2. **Safety.** A simulated robot that crashes costs nothing. Dropping a real G1 costs time and money and risks damaging expensive hardware.
-3. **Parallelism.** A simulator running on a graphics card (GPU) can run *thousands* of robots simultaneously. In our setup, **2048 copies of the robot practice in parallel on a single GPU (an NVIDIA GB10)**. Each copy is its own independent experiment, all feeding experience back to the same learning algorithm at once.
+3. **Parallelism.** A simulator running on a graphics processing unit (GPU) — the same kind of chip that renders video-game graphics — can run *thousands* of robots simultaneously. In our setup, **2048 copies of the robot practice in parallel on a single GPU (an NVIDIA GB10)**. Each copy is its own independent experiment, all feeding experience back to the same learning algorithm at once.
 
 ---
 
@@ -41,7 +41,7 @@ Instead of writing out the rules of walking by hand (which would be enormously c
 Our reward rewards the robot for:
 - Moving at the commanded forward speed
 - Keeping its body upright
-- Moving its joints smoothly (penalizing jerky, high-energy motions)
+- Moving its joints smoothly (penalizing — subtracting points for — jerky, high-energy motions)
 - Not falling
 
 We never write a single line of code that says "swing the left leg forward." All of that emerges from chasing a higher score.
@@ -50,7 +50,7 @@ We never write a single line of code that says "swing the left leg forward." All
 
 ## How does the robot actually learn? (PPO, hand-waved)
 
-The algorithm that adjusts the weights is called **PPO** (Proximal Policy Optimization), a widely used method in **reinforcement learning** — the field of machine learning concerned with agents that learn by trial and error.
+The algorithm that adjusts the weights is called **PPO** (Proximal Policy Optimization), a widely used method in **reinforcement learning** — the field of machine learning (teaching computers to improve at a task from experience) concerned with agents that learn by trial and error.
 
 The loop is simple in concept:
 
@@ -76,7 +76,7 @@ The robot does not practice forever in one go. Training is broken into **episode
 
 ## What can you change to explore?
 
-Report 03 (`03-turning-the-knobs.md`) walks through what happens when you change one thing in the reward or training setup. The most instructive knobs include: how heavily falling is penalized, the weight on the velocity-tracking reward, and the length of the episode time-out. Small changes produce surprisingly different walking styles.
+Report 03 ([03-turning-the-knobs.md](03-turning-the-knobs.md)) walks through what happens when you change one thing in the reward or training setup. The most instructive knobs include: how heavily falling is penalized, the weight on the velocity-tracking reward, and the length of the episode time-out. Small changes produce surprisingly different walking styles.
 
 ---
 
