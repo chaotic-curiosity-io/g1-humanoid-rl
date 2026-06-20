@@ -193,10 +193,35 @@ docker start open-webui compose-arangodb-1 ollama-compose
 
 ## Open questions
 
-The following items are unresolved and depend on reading the live mjlab config inside `mjlab-dev`. They are resolved by the read-only Spark probe in Task 12 of the implementation plan before the training run begins.
+The following items were targeted for resolution by the read-only Spark probe in Task 12 of the implementation plan.
 
-1. **Exact `feet_air_time` reward term name:** The master spec refers to this term as `feet_air_time`. The actual key in the mjlab reward config may differ (e.g. `air_time`, `feet_air_time_l2`, or similar). Confirm by reading `params/env.yaml` from the baseline run or by inspecting the velocity task's reward manager. The training command above uses `--env.rewards.feet_air_time.weight 2.0` as a placeholder; the actual flag must match the exact term name. **⚠ verify on Spark:** `sed -n 1,200p /workspace/mjlab/logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/params/env.yaml`
+**Probe run: 2026-06-19 — `sed -n 1071,1530p /workspace/mjlab/logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/params/env.yaml`**
 
-2. **Three curriculum-stage override keys:** The CLAUDE.md snippet uses `--env.curriculum.command-vel.params.velocity-stages.{0,1,2}.lin-vel-x`. Confirm these are the actual YAML paths in the Flat task's curriculum config. If the keys differ, the override silently fails and the curriculum clobbers the range at every episode reset. **⚠ verify on Spark:** same `env.yaml` probe as above — look for the `command-vel` curriculum section.
+1. **Exact air-time reward term name — RESOLVED.** The YAML key in the Flat task's reward config is **`air_time`** (not `feet_air_time`). The underlying function is `mjlab.tasks.velocity.mdp.rewards.feet_air_time`, but the CLI flag to override its weight is `--env.rewards.air_time.weight`. In the baseline run this term has `weight: 0.0` — it is registered but inactive. The training command in the Concrete runs section must use `--env.rewards.air_time.weight 2.0` (not `feet_air_time`).
 
-3. **Whether high speed needs episode-length or terrain adjustment:** At 3.0 m/s, the robot may reach the end of the flat arena before the episode time limit, causing unusually short episodes that degrade PPO's advantage estimates. Check whether the default episode length and arena size accommodate high-speed training, or whether `--env.max-episode-length` or arena dimensions need increasing. **⚠ verify on Spark:** check `params/env.yaml` for `max_episode_length` and the terrain bounds in the baseline run.
+   Full reward term names confirmed in the baseline `env.yaml` (for reference across S1 and S4):
+   `track_linear_velocity`, `track_angular_velocity`, `upright`, `pose`, `body_ang_vel`, `angular_momentum`, `dof_pos_limits`, `action_rate_l2`, `air_time`, `foot_clearance`, `foot_swing_height`, `foot_slip`, `soft_landing`, `self_collisions`.
+   There is **no `base_height` term** and **no `termination` term** in the velocity task reward config.
+
+2. **Three curriculum-stage override keys — RESOLVED.** The YAML structure confirmed:
+   ```yaml
+   curriculum:
+     command_vel:
+       func: mjlab.tasks.velocity.mdp.curriculums.commands_vel
+       params:
+         command_name: twist
+         velocity_stages:
+         - step: 0
+           lin_vel_x: (-1.0, 1.0)
+         - step: 120000
+           lin_vel_x: (-1.5, 2.0)
+         - step: 240000
+           lin_vel_x: (-2.0, 3.0)
+   ```
+   The three CLI override keys are (using hyphen-to-underscore translation that the mjlab CLI applies):
+   `--env.curriculum.command-vel.params.velocity-stages.0.lin-vel-x`
+   `--env.curriculum.command-vel.params.velocity-stages.1.lin-vel-x`
+   `--env.curriculum.command-vel.params.velocity-stages.2.lin-vel-x`
+   These match the CLAUDE.md snippet exactly.
+
+3. **Whether high speed needs episode-length or terrain adjustment — RESOLVED.** The baseline run's `episode_length_s: 20.0` at a decimation of 4 (50 Hz control) equals 1000 steps. At 3.0 m/s for 20 seconds the robot travels 60 m; the flat arena uses `env_spacing: 2.0` m per env with no explicit wall bounds visible in the YAML. This is a standard periodic/infinite flat plane, not a bounded arena — the robot can run indefinitely without hitting a wall. No episode-length or terrain adjustment is required for S1.

@@ -376,12 +376,46 @@ The following criteria must all be met before S4 is declared successful and `rew
 
 ## Open questions
 
-The following items depend on the live mjlab reward configuration inside `mjlab-dev`. They are the unresolved details for the cleanest induction of each specimen and are targeted for resolution by the read-only Spark probe in Task 12 of the implementation plan, before any specimens are run.
+The following items were targeted for resolution by the read-only Spark probe in Task 12 of the implementation plan.
 
-1. **Exact reward-term names for Specimens A and B.** The CLI overrides above use names like `--env.rewards.base_height.weight`, `--env.rewards.upright.weight`, and `--env.rewards.termination.weight`. The actual term names in the Flat velocity task's reward config may differ — for example, `upright` might be `torso_upright`, `uprightness`, or `flat_orientation`; `base_height` might be `base_height_l2` or something else entirely. If a term name is wrong, the override is silently ignored (the default weight remains in force) and the specimen will not produce the expected hack. **⚠ verify on Spark:** `sed -n 1,200p /workspace/mjlab/logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/params/env.yaml` — look at the `rewards:` block and record the exact key for each term used in Specimens A and B.
+**Probe run: 2026-06-19 — `sed -n 1071,1470p /workspace/mjlab/logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/params/env.yaml` + `cat scripts/record_policy.py` (local checkout)**
 
-2. **Cleanest induction for Specimen C (distance from start).** The spec above induces the distance/contact hack by driving commanded velocity to an unrealistically high range while removing uprightness incentives. Whether this cleanly produces contact-exploitation on the stock Flat env — versus just a degraded high-speed walk — depends on the env's contact-penalty structure. An alternative induction is to add a small custom `displacement_from_start` reward term directly, but that requires a code change (a new reward term in the mjlab task). The cleaner approach depends on what the baseline reward config looks like. **⚠ verify on Spark:** after reading the reward config for Specimen A/B above, determine whether the existing terms include any contact penalty (hand/knee contact costs). If they do, zeroing them alongside the uprightness term will produce cleaner contact exploitation. If a custom term is simpler, note it here as a code-writing sub-step.
+1. **Exact reward-term names for Specimens A and B — RESOLVED WITH CORRECTIONS.** The complete reward-term key list from the baseline Flat velocity task `env.yaml`:
 
-3. **Whether Specimen D needs an intermediate (iterB-style) checkpoint.** The crash-roll spoofing is most dramatic when the policy being scored is one that genuinely produces crash-rolls (not a good policy). The final cartwheel policy (`model_19999.pt`) produces real cartwheels; the scorer will likely score it honestly. To show the spoofing clearly, an intermediate checkpoint — one that was face-planting but rolling through 180° — is needed. **⚠ verify on Spark:** `ls logs/rsl_rl/g1_tracking/` to see whether any intermediate checkpoints from cartwheel iterA or iterB are still on disk. If they are, record which timestamp/checkpoint best demonstrates the crash-roll. If no intermediate checkpoint is available, the gallery entry can be written from memory (using `cartwheel-journey.md` as the record) with the final policy's score shown as a contrast.
+   | YAML key | Function | Default weight |
+   |---|---|---|
+   | `track_linear_velocity` | `rewards.track_linear_velocity` | 2.0 |
+   | `track_angular_velocity` | `rewards.track_angular_velocity` | 2.0 |
+   | `upright` | `rewards.upright` | 1.0 |
+   | `pose` | `rewards.variable_posture` | 1.0 |
+   | `body_ang_vel` | `rewards.body_angular_velocity_penalty` | -0.05 |
+   | `angular_momentum` | `rewards.angular_momentum_penalty` | -0.02 |
+   | `dof_pos_limits` | `envs.mdp.rewards.joint_pos_limits` | -1.0 |
+   | `action_rate_l2` | `envs.mdp.rewards.action_rate_l2` | -0.1 |
+   | `air_time` | `rewards.feet_air_time` | **0.0** |
+   | `foot_clearance` | `rewards.feet_clearance` | -2.0 |
+   | `foot_swing_height` | `rewards.feet_swing_height` | -0.25 |
+   | `foot_slip` | `rewards.feet_slip` | -0.1 |
+   | `soft_landing` | `rewards.soft_landing` | -0.00001 |
+   | `self_collisions` | `rewards.self_collision_cost` | -1.0 |
 
-4. **`record_policy.py` flag names for `--disable-terminations` and `--telemetry`.** These flags were added during the cartwheel project. **⚠ verify on Spark:** `python scripts/record_policy.py --help` — confirm the exact flag names. The commands in this spec use `--disable-terminations`, `--telemetry`, `--no-shadows`, `--no-reflections`, and `--no-debug-viz`; if any name differs, the spec commands must be updated before recording.
+   **Specimen A corrections:** The command `--env.rewards.base_height.weight 0.0` and `--env.rewards.termination.weight 0.0` are **wrong** — neither `base_height` nor `termination` exists as a reward term. For the diving faceplant, zero out: `--env.rewards.upright.weight 0.0` (confirmed key) and consider also `--env.rewards.pose.weight 0.0` (the `variable_posture` term also penalizes bad posture).
+
+   **Specimen B corrections:** There is **no `base_height` reward term.** To induce a jump-and-collapse hack, options are: (a) set `air_time` weight very high (`--env.rewards.air_time.weight 20.0`) since that term directly rewards time in the air; or (b) write a custom one-line `base_height` reward term (requires new code). The `air_time` approach is cleaner for a killable demo. Update the Specimen B command to use `--env.rewards.air_time.weight 20.0` instead.
+
+   The correct CLI override flag for air-time is `--env.rewards.air_time.weight` (not `feet_air_time`).
+
+2. **Contact-penalty structure for Specimen C — RESOLVED.** The baseline reward config has `self_collisions` (penalizes self-collision via a force sensor named `self_collision`) and `soft_landing` (penalizes high-velocity foot contact), but **no explicit hand/knee/head contact cost**. There is no term that directly penalizes unintended body-ground contact. This means the Specimen C induction — high commanded speed with uprightness zeroed — should cleanly produce contact exploitation, because there is nothing in the reward to penalize it. No custom reward term is needed; the existing override-based induction approach is valid.
+
+3. **Whether Specimen D needs an intermediate checkpoint — deferred.** The probe did not list the g1_tracking run directories (not part of this probe's scope). **⚠ still unresolved:** run `ssh spark "docker exec mjlab-dev bash -lc 'ls /workspace/mjlab/logs/rsl_rl/g1_tracking/'"` to check whether iterA or iterB intermediate checkpoints are still on disk. If no intermediate checkpoint with visible crash-rolls is available, document the specimen from `cartwheel-journey.md` using the final policy's honest score as the comparison.
+
+4. **`record_policy.py` flag names — RESOLVED WITH IMPORTANT CORRECTIONS.** The script in the local checkout (`scripts/record_policy.py`) was read directly. Key findings that affect S4 recording commands:
+
+   - **`--disable-terminations` confirmed.** Takes an int (`1` to disable). ✓
+   - **`--dump-telemetry` (not `--telemetry`).** The spec commands use `--telemetry`; the actual flag is `--dump-telemetry`.
+   - **`--no-shadows`, `--no-reflections`, `--no-debug-viz` do NOT exist.** Shadows and reflections are disabled unconditionally in code; no CLI flags for these. Remove them from all recording commands.
+   - **The script is tracking-only** (task hardcoded to `Mjlab-Tracking-Flat-Unitree-G1`). **It cannot be used for S4 Specimens A, B, C** which use the velocity task. A separate recording approach is needed for those specimens — either a velocity-capable version of `record_policy.py` or `mjlab.scripts.play` with output.
+   - **`--output-dir` (not `--output`).** The spec commands use `--output`; the actual flag is `--output-dir`.
+   - **`--checkpoint-file` (not `--checkpoint`).** Spec uses `--checkpoint`; actual flag is `--checkpoint-file`.
+   - **The script is NOT on the Spark.** `/workspace/scripts/` contains only `plot_training_curves.py` and `watch_learning.py`. Copy before use: `scp scripts/record_policy.py spark:/tmp/ && ssh spark "docker cp /tmp/record_policy.py mjlab-dev:/workspace/scripts/record_policy.py"`.
+   - **Specimen D can use `record_policy.py` as-is** (it is a tracking task). Specimens A, B, C cannot.

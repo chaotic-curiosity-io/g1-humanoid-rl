@@ -292,12 +292,31 @@ The following criteria must all be met before the S3 run is declared successful 
 
 ## Open questions
 
-The following items depend on reading the live mjlab configuration inside `mjlab-dev`. They are the largest unknowns in the four-spine program and are targeted for resolution by the read-only Spark probe in Task 12 of the implementation plan, before any code is written.
+The following items were targeted for resolution by the read-only Spark probe in Task 12 of the implementation plan.
 
-1. **mjlab's task and reward-manager API — the biggest unknown.** Writing `Mjlab-Recovery-Flat-Unitree-G1` requires understanding how mjlab defines tasks, how the reward manager is structured, and which base classes to inherit from. **⚠ verify on Spark:** `ls /workspace/mjlab/src/mjlab/tasks/` to see the task package layout; read one existing task class (e.g. the Velocity-Flat task) to understand the API pattern (reward term registration, observation definitions, initial-state setup). The exact class names, decorator patterns, and config integration points are all unknown from this checkout.
+**Probe run: 2026-06-19 — `ls /workspace/mjlab/src/mjlab/tasks && grep -ril "recover|getup|get_up|stand_up" /workspace/mjlab/src/mjlab || true`**
 
-2. **Whether an upstream recovery task already exists to fork.** If mjlab or a bundled upstream repo already contains a recovery or stand-up task, forking it is faster and safer than writing from scratch — it provides proven initial-state randomization, working reward terms, and a tested termination structure. **⚠ verify on Spark:** `grep -ril "recover\|getup\|get_up\|stand_up" /workspace/mjlab/src/mjlab/ || true`. If a task is found, read its implementation and decide whether to fork it directly or use it as a reference for the new task.
+1. **mjlab's task package layout and registration API — RESOLVED.** The tasks package contains these top-level sub-packages: `velocity`, `tracking`, `cartpole`, `manipulation` (plus `registry.py` and `__init__.py`). The `__init__.py` uses `import_packages(__name__, blacklist=["utils", ".mdp"])` for auto-discovery — any new sub-package dropped into `src/mjlab/tasks/` is automatically imported.
 
-3. **Cleanest way to spawn randomized fallen poses.** Initial-state randomization is typically done by setting the root body's quaternion (orientation) and optionally joint angles in the task's `reset()` method. The exact MuJoCo/mjlab API calls for this (e.g. `data.qpos[3:7]`, `env.reset_idx()`, or a config-driven spawner) are unknown without reading an existing task. **⚠ verify on Spark:** read the Velocity-Flat task's reset logic to understand how initial states are set; determine whether mjlab has a built-in "random orientation" utility or whether the quaternion must be set manually.
+   Task registration uses an **explicit `register_mjlab_task()` call** in a robot-specific config `__init__.py`. The pattern (from `tasks/velocity/config/g1/__init__.py`) is:
+   ```python
+   from mjlab.tasks.registry import register_mjlab_task
+   from mjlab.tasks.velocity.rl import VelocityOnPolicyRunner
+   from .env_cfgs import unitree_g1_flat_env_cfg
+   from .rl_cfg import unitree_g1_ppo_runner_cfg
 
-4. **Whether the smoke-train probe requires a Spark-side script edit to register the new task.** In mjlab, new tasks may need to be registered in an `__init__.py` or a task-registry file before they can be referenced by name in `mjlab.scripts.train`. **⚠ verify on Spark:** check whether mjlab uses an explicit registry (e.g. `src/mjlab/tasks/__init__.py`) or discovers tasks automatically from the package. If a registry exists, the new task must be added to it before the smoke-train probe will succeed.
+   register_mjlab_task(
+     task_id="Mjlab-Recovery-Flat-Unitree-G1",
+     env_cfg=unitree_g1_flat_env_cfg(),       # replace with recovery cfg
+     play_env_cfg=unitree_g1_flat_env_cfg(play=True),
+     rl_cfg=unitree_g1_ppo_runner_cfg(),
+     runner_cls=VelocityOnPolicyRunner,        # or None for default
+   )
+   ```
+   The new recovery task must be placed under `src/mjlab/tasks/recovery/` (or similar), with a `config/g1/__init__.py` that calls `register_mjlab_task`. Auto-discovery via `import_packages` will pick it up — no changes to the top-level `tasks/__init__.py` needed.
+
+2. **Whether an upstream recovery task already exists to fork — RESOLVED.** The grep for `recover`, `getup`, `get_up`, `stand_up` across `/workspace/mjlab/src/mjlab/` returned **only one match**: `/workspace/mjlab/src/mjlab/entity/data.py` (which contains neither a task class nor reward terms — it matched on an unrelated field name). **No recovery or get-up task exists in the current mjlab codebase.** The S3 task must be written from scratch without an upstream template to fork. The velocity task's `config/g1/__init__.py` and `velocity_env_cfg.py` are the closest structural reference.
+
+3. **Cleanest way to spawn randomized fallen poses — partially resolved.** The velocity task uses a config-driven `init_state` in the `entities.robot` block (see the `env.yaml` baseline): root `pos`, `rot` (quaternion), `lin_vel`, `ang_vel`, and per-joint `joint_pos` patterns are all set declaratively. The `joint_pos` block uses regex patterns (e.g. `".*_hip_pitch_joint": -0.312`). For fallen-pose randomization, the most likely approach is overriding the root quaternion at episode reset via mjlab's event/randomization system (analogous to the terrain init randomization pattern). The exact API (`EventManager`, `reset_robot_state`, or direct `data.qpos` mutation) requires reading the velocity task's event/randomization config — not done in this probe. **⚠ still unresolved:** inspect `tasks/velocity/velocity_env_cfg.py` or an event config to find the reset/randomization hook used for initial state.
+
+4. **Whether the smoke-train probe requires a registry edit — RESOLVED.** mjlab uses `import_packages` auto-discovery, not a hand-maintained list. A new task placed in a new sub-package under `src/mjlab/tasks/` with a `register_mjlab_task()` call in its `__init__.py` is discovered automatically at import time — no changes to any existing file are needed beyond the new task files themselves.
