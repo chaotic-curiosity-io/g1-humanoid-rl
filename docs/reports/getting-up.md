@@ -1,145 +1,136 @@
-# Getting Up: Teaching a Robot to Stand From the Floor
+# Getting Up: Four Tries to Teach a Robot to Stand From the Floor
 
-> **Draft.** This report is populated after the S3 training run (see [the spec](../superpowers/specs/2026-06-19-spine-getup-recovery.md) for the plan). The structure below is the skeleton it will fill.
-
-*This report is the From-Scratch Tasks track's entry. If you are reading this without reading the earlier reports, start with [00-primer.md](00-primer.md) for the vocabulary. Terms like [policy](00-primer.md), [reward](00-primer.md), and [episode](00-primer.md) are defined there.*
+*This report is the From-Scratch Tasks track's entry. If you are new here, read [00-primer.md](00-primer.md) first for the vocabulary — [policy](00-primer.md), [reward](00-primer.md), [episode](00-primer.md). This is the deepest report in the series, because it is the one where **the behaviour is built entirely out of the reward function** — and getting that reward right took four attempts, each of which failed in a different, instructive way.*
 
 ---
 
-## What you are about to see
+## What makes this different
 
-Every robot in this series so far has started each episode standing upright. Falling was the failure condition: fall, and the episode resets. The reward assumed the robot would try to stay standing, and it did, because staying standing was the only way to keep collecting reward.
+Every other robot in this series starts each episode **standing**. Falling is the failure condition. The reward never had to *teach* standing — it only had to keep the robot from losing a standing start.
 
-This report removes that assumption entirely.
+This report throws that away. The robot starts each episode **lying on the ground** — on its back, face-down, or on either side, at a random heading. There is **no velocity command** to follow and **no reference motion** to imitate (unlike the [cartwheel](imitation-cartwheel.md)). The only guidance is a reward that scores higher as the robot gets its body up and vertical. Everything — the squirm, the push, the sequence of limb movements — has to be *discovered*.
 
-The robot starts each episode lying on the ground — face-up, face-down, or crumpled at a random angle. It has no velocity command to follow. It has no reference motion to imitate. It has only a reward function that gives higher scores when it is more upright, and a task that ends successfully only when it has managed to stand up and hold that position for a few continuous seconds.
+That makes get-up the purest test of reward design in the whole program. And purity cuts both ways: with nothing but a reward to lean on, the optimiser will find the **shortest path to the highest score**, and that path is almost never the one you pictured. This report is the honest log of four such paths — three of them wrong.
 
-Everything else — the strategy, the sequence of movements, the way it uses its arms and legs — the robot has to discover on its own, through trial and error.
+---
 
-**Why this is interesting and difficult in equal measure:** when you design the objective from scratch, the robot will find the shortest path to the highest score. And the shortest path is not always the one you intended. This task is the most likely in this entire series to produce "reward hacking" — strategies the robot finds that technically satisfy the reward but are completely unlike what you meant. Documenting those hacks honestly is as important as documenting the final successful behavior.
+## First, build the task
+
+This is the only spine task that needed **new code** before any training. `Mjlab-Recovery-Flat-Unitree-G1` didn't exist; it was written by cloning the flat velocity task and changing four things:
+
+1. **The starting state.** A custom reset function drops the robot into one of four genuinely-fallen poses (supine, face-down, left side, right side) at a random heading, pelvis ~0.1 m off the floor. This is the one truly novel piece of code.
+2. **The fall termination is removed.** The robot *starts* fallen — a "you fell over" termination would end every episode at step 1.
+3. **The velocity command is zeroed** (there's nowhere to walk).
+4. **The reward** rewards rising height and an upright torso instead of locomotion.
+
+`★ The first lesson, before any training:` in a from-scratch task, the **starting-state distribution and the success definition are as load-bearing as the reward.** The very first build had a bug — half the "fallen" robots actually spawned *upright but low*, and trivially sprang to standing under no action at all. A zero-action physics probe caught it (the robot must *stay down* unless the policy lifts it), and the reset was fixed so all four poses are genuinely on the ground. A task that's accidentally trivial teaches the policy nothing.
+
+The new task passed `ruff`/`pyright`/`pytest` and a no-NaN smoke-train before the real runs. Then came the four attempts.
+
+---
+
+## The four attempts
+
+Each attempt below is the *same* task with a *different reward specification*. Watching the failure modes is the entire point.
+
+### Attempt 1 — the stillness hack
+
+**Reward:** an upright term, a Gaussian "height near standing" bonus, and — fatefully — the velocity-tracking rewards kept from the walking task with their command pinned to **zero** (intended as a "hold still once you're up" incentive).
+
+**What happened:** reward climbed to ~62, but the success rate **peaked early (~33%) and then decayed toward zero.** The robot learned to **lie perfectly still** — because a motionless body has zero velocity, which the zero-command tracking rewards pay handsomely, and the Gaussian height bonus was ≈0 with *no gradient* down on the floor. Lying still out-scored the risky business of getting up, so the policy gave up on standing.
+
+**Fix:** delete the velocity rewards (they reward stillness, which a fallen robot satisfies trivially), and make the height reward a **monotonic ramp** — non-zero gradient at *every* height, so there's always a signal to rise.
+
+### Attempt 2 — the success-termination trap
+
+**Reward:** stillness terms gone; monotonic height ramp in. Now the height reward was *real* (the robot got its pelvis up to ~0.5 m). But the success rate **still peaked (~50%) then decayed**, and episodes ran nearly full-length.
+
+**What happened:** the task ended the episode the moment the robot stood up (`stood_up` was a success *termination*). Standing at step 100 therefore *threw away* ~900 steps of future height reward, while hovering in a half-crouch farmed that reward for the entire episode. The optimiser correctly learned to get *almost* up and **deliberately not finish**.
+
+**Fix:** remove the success termination entirely. With only a timeout, the way to maximise reward is to stand **and stay standing** for the full 20 seconds.
+
+### Attempt 3 — the stable-crouch local optimum
+
+**Reward:** as Attempt 2, success-termination removed.
+
+**What happened:** genuine progress — the robot now **recovers from the floor to a stable, upright deep squat and holds it** (torso vertical, `upright` reward ~0.95). But it stalls at a pelvis height of ~0.52 m, short of the ~0.76 m full stand:
+
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s3_getup_still.png">
+  <source src="assets/s3_crouch_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s3_crouch_side.mp4">download the clip</a> instead.
+</video>
+
+A deep, wide squat is a **stable, low-effort equilibrium**: low centre of mass, wide base, almost no ongoing action needed. Rising the last 0.24 m demands constant active balance for only a little more height reward — not worth it, so the policy settled.
+
+**Fix:** tilt the trade-off. Double the height weight (5 → 10) so the last bit of standing is clearly worth it, and cut the action-rate penalty (−0.1 → −0.03) so the balancing effort is cheap.
+
+### Attempt 4 — a full stand
+
+It worked. The height reward climbed steadily to **9.7 out of a maximum 10** (pelvis ≈ 0.74 m, target 0.76) and — unlike every previous attempt — **held there with no decay**:
+
+![stand-up height reward climbing to 9.7 and holding](assets/s3_standup.png)
+
+The robot now recovers from a fallen pose all the way to a **full upright stand**, and stays there:
+
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s3_getup_still.png">
+  <source src="assets/s3_getup_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s3_getup_side.mp4">download the clip</a> instead.
+</video>
+
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s3_getup_still.png">
+  <source src="assets/s3_getup_chase.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s3_getup_chase.mp4">download the clip</a> instead.
+</video>
+
+The overall reward shows the healthy shape of a hard problem being solved: a dip into the negatives early (exploration, dominated by penalties) before the climb to a high plateau.
+
+![mean reward S-curve, dip then climb to ~198](assets/s3_reward.png)
 
 ---
 
 ## The command
 
-This is the only task in this series that requires writing new code before training begins. The task `Mjlab-Recovery-Flat-Unitree-G1` does not exist yet — it has to be built.
-
-**Step 1: Write the new task (in-container)**
-
-The new task is written as a Python class inside the mjlab source tree on the Spark. Because `mjlab/` is owned by root on the Spark host, do not `sudo chown` the tree — use `docker cp` from `/tmp` or edit directly inside the container:
-
-```bash
-# Copy the task file into the container:
-scp scripts/recovery_task.py spark:/tmp/recovery_task.py
-ssh spark "docker cp /tmp/recovery_task.py \
-  mjlab-dev:/workspace/mjlab/src/mjlab/tasks/recovery_task.py"
-```
-
-The task must implement these reward terms: `base_height_rising` (reward the pelvis rising), `torso_upright` (reward vertical torso alignment), `stability_bonus` (reward holding the standing pose for consecutive seconds), `joint_velocity_penalty` (penalize thrashing), and `joint_torque_penalty` (penalize forceful movement). Critically, it must *not* terminate on falling — every episode starts fallen, so a falling-termination would kill every episode at step 1. Only two terminations are valid: success-hold (the robot has stood stably long enough) and timeout.
-
-**Step 2: Pre-commit checks**
-
-Before training, run the full pre-commit suite inside the container:
-
-```bash
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && ruff format && ruff check --fix && pyright'"
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && pytest tests/'"
-```
-
-Both must pass before proceeding. Type errors in reward managers often signal wrong tensor shapes that produce NaN rewards at runtime.
-
-**Step 3: Smoke-train probe**
-
-Verify the task registers and steps without errors before committing to a full training run:
+The final (Attempt 4) training run, after the task was built and deployed into the container:
 
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjlab.scripts.train \
   Mjlab-Recovery-Flat-Unitree-G1 \
-  --agent.max-iterations 200 \
-  --agent.num-envs 1024 \
-  --agent.seed 0'"
+  --env.scene.num-envs 2048 \
+  --agent.max-iterations 2500 \
+  --agent.run-name recovery-v4'"
 ```
 
-Kill after ~50 printed iterations. Verify: no import errors; rewards are finite (not NaN); episodes are not terminating at step 1 (which would mean the fallen-pose termination is mis-triggered on start).
-
-**Step 4: Full training run (iterA)**
-
-```bash
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjlab.scripts.train \
-  Mjlab-Recovery-Flat-Unitree-G1 \
-  --agent.max-iterations 5000 \
-  --agent.num-envs 4096 \
-  --agent.seed 42'"
-```
-
-**Step 5: Record and review**
-
-```bash
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Recovery-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_recovery/<timestamp>/model_<best_iter>.pt \
-  --no-shadows --no-reflections --no-debug-viz \
-  --cameras chase side front top grid \
-  --output /workspace/clips/s3_final_{camera}.mp4'"
-scp spark:/workspace/clips/s3_*.mp4 docs/reports/assets/
-```
-
-See the [spec](../superpowers/specs/2026-06-19-spine-getup-recovery.md) for the full sequence including the host-quiesce bracket, the mjlab source-ownership rules, and the complete smoke-train verification checklist.
+The new task code is deployed in the container at `mjlab/src/mjlab/tasks/recovery/` (and mirrored in this repo's working notes for reproducibility). Because the mjlab tree is root-owned on the Spark, files are written to `/tmp` and `docker cp`'d into the container — never `sudo chown`'d. The recovery-specific reward weights live in `config/g1/env_cfgs.py`; the lying-down reset is in `mdp/events.py`.
 
 ---
 
-## Results
+## The lesson
 
-*This section is populated after the S3 training run and visual verification. Placeholders below describe what will appear here.*
+Four attempts, four behaviours, one task. None of the failures was a bug in the learning algorithm — in each case PPO found the highest-scoring behaviour available, exactly as designed. The failures were all in the **specification**:
 
-### The training curve
+| Attempt | The misspecification | What the robot did |
+|---|---|---|
+| 1 | zero-command velocity rewards pay for *stillness* | lay still |
+| 2 | success *ends the episode*, cutting off reward | half-crouched forever |
+| 3 | a stable crouch is cheap; full standing isn't worth it | stood, but only halfway |
+| 4 | — | **got up** |
 
-**[Placeholder: reward curve plot — `assets/s3_reward_curve.png`]**
+Every one of these is a [reward hack](reward-hacking-gallery.md) — the optimiser exploiting a gap between what you measured and what you meant. Get-up makes them unavoidable precisely because there's no reference motion to anchor the behaviour: the reward, the starting state, and the success definition are *all* you have, and *all* of them have to be right.
 
-*Mean reward over training iterations. For this task, what matters in the curve is different from the walking curves: a flat-zero curve likely means the termination-on-falling bug (episodes ending at step 1, no learning signal). Any upward movement is evidence the robot is discovering how to lift itself.*
-
-### The get-up behavior
-
-**[Placeholder: final multi-camera clips — `assets/s3_final_side.mp4`, `assets/s3_final_grid.mp4`]**
-
-*Four camera angles. What to look for: the robot starting flat on the ground, a recognizable sequence of movements toward upright, and the robot reaching and holding a stable stand. A viewer with no ML background should be able to watch this clip and say "yes, it figured out how to stand up."*
-
-### The iteration log: what the robot tried first
-
-**[Placeholder: prose iteration log — written after the run completes, while the context is fresh.]**
-
-This section documents every distinct strategy the robot found during the shaping process — including the ones that were wrong:
-
-- **IterA:** what reward design was tried first? What behavior emerged? Was it a genuine stand-up, or a hack (elbow-prop, height-without-uprightness, jitter-stand)? What was changed for iterB?
-- **IterB (if needed):** same.
-- How many iterations before the final design produced reliable stand-ups?
-
-Each hack found during this process is documented here and cross-linked to [reward-hacking-gallery.md](reward-hacking-gallery.md), which collects the canonical record of hacks found across the entire program.
-
-### Common hacks to watch for
-
-The reward design for this task is the most prone to hacking of anything in this series. Three failure modes to check in the render before declaring success:
-
-**Height without uprightness** — the robot raises its pelvis (by kicking its legs into the air, for example) without actually going vertical. This scores high on `base_height_rising` but the robot ends up upside-down, not standing.
-
-**Elbow-prop** — the robot gets partially up by bracing on one elbow and satisfies the uprightness threshold at a shallow angle, never reaching full standing. Looks like progress in the reward curve; looks like a bad push-up in the video.
-
-**Jitter-stand** — the robot flails to a near-standing pose just long enough to trigger the success-hold timer, then falls, earning the stability bonus repeatedly. Each episode ends in "success" even though the robot is falling immediately after the timer fires.
-
-If the clips show any of these patterns, the reward design needs adjustment. The iteration log will document which hacks appeared and what terms closed them.
+The practical takeaway is not "RL is fiddly." It's that **designing a from-scratch objective is an iterative, empirical craft** — you write a reward, watch what the optimiser does with it (on video, never on the number alone), and the gap between intent and behaviour tells you what to fix next. Four iterations to a get-up is not failure; it *is* the method.
 
 ---
 
 ## Tweak this to explore
 
-**Adjust the success-hold duration.** The task terminates successfully when the robot has stood for a continuous hold period (e.g. 2 seconds). Shorten this and the jitter-stand hack becomes easier to exploit. Lengthen it and the policy needs to demonstrate genuine, sustained balance — but convergence takes longer.
+**Re-run the four attempts.** The four reward configs are the cleanest reward-design lesson in the repo. Watch the gait degrade and recover as you toggle the velocity rewards, the success termination, the height weight, and the action-rate penalty one at a time.
 
-**Modify the reward weights.** The balance between `base_height_rising`, `torso_upright`, and `stability_bonus` determines what the robot prioritizes. Raise `torso_upright` relative to `base_height_rising` and the robot is penalized more for horizontal postures. Raise `stability_bonus` and the robot is rewarded more for holding a stand once it achieves it. Each change closes some hacks and potentially opens others.
+**Harder falls.** Widen the reset randomisation — more extreme crumples, harder initial joint scatter — for a policy robust to a wider variety of falls. Costs more training.
 
-**Try randomizing the fallen pose more aggressively.** The task spawns the robot in a randomized fallen pose. A wider randomization range (more varied starting angles, more crumpled joint configurations) produces a more robust policy that can get up from a wider variety of falls — but it also makes learning harder, especially in early iterations.
+**Stricter standing.** The height ramp tops out at 0.76 m. Add an explicit "hold still once up" reward *gated on already being upright* (the version that does NOT pay a fallen robot) to get a calmer final stand.
 
-**Watch the connection to reward hacking.** This task is the live version of the [reward-hacking gallery](reward-hacking-gallery.md). Every hack the robot finds here is a specimen for that report. Keep notes during the iteration process — the freshest context produces the clearest explanations.
+**The whole task is a reward-hacking gallery.** Every attempt above is a specimen — see [reward-hacking-gallery.md](reward-hacking-gallery.md) for the cross-program collection. The freshest, clearest hack explanations come from writing them down the moment you see them, which is exactly what this report did.
 
 ---
 
-*All experiments use the Unitree G1 on flat terrain, trained with the MuJoCo-Warp simulator on a DGX Spark (NVIDIA GB10, aarch64). The spec for this run: [2026-06-19-spine-getup-recovery.md](../superpowers/specs/2026-06-19-spine-getup-recovery.md).*
+*Unitree G1 on flat terrain, MuJoCo-Warp on a DGX Spark (NVIDIA GB10, aarch64). A new `Mjlab-Recovery-Flat-Unitree-G1` task, four reward iterations, 2048 parallel robots, up to 2500 iterations. The spec for this run: [2026-06-19-spine-getup-recovery.md](../superpowers/specs/2026-06-19-spine-getup-recovery.md).*
