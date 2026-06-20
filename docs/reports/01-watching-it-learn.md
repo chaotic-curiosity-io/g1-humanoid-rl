@@ -30,7 +30,7 @@ Somewhere between iteration 500 and iteration 1,000, something clicks. The robot
 
 ![The G1 robot at iteration 2050, walking confidently forward](assets/still_final.png)
 
-By the end of the run the gait has smoothed out considerably. The robot tracks a commanded forward speed, keeps its torso upright, and coordinates its legs in a rhythm that looks genuinely human-like. The mean [reward](00-primer.md) at this point is **50.5**, and the robot is surviving almost the entire 20-simulated-second episode. (The run was stopped here; the reward was still climbing, not plateaued — more on that below.)
+By the end of the run the gait has smoothed out considerably. The robot tracks a commanded forward speed, keeps its torso upright, and coordinates its legs in a rhythm that looks genuinely human-like. The mean [reward](00-primer.md) at this point is **50.5** (there's no fixed maximum — higher reward is always better), and the robot is surviving almost the entire 20-simulated-second episode. (The run was stopped here; the reward was still climbing, not plateaued — more on that below.)
 
 ---
 
@@ -64,7 +64,7 @@ The run ended here without plateauing. Given more iterations, the curve would li
 
 ![Episode length over training iterations 0 to 2050](assets/learn_baseline_episode_length.png)
 
-[Episode length](00-primer.md) — how many timesteps the robot survives before falling or timing out — is plotted above over the same run. Notice that it almost mirrors the reward curve:
+[Episode length](00-primer.md) — how many timesteps the robot survives before falling or timing out — is plotted above over the same run. Episode length tracks the reward curve through the first half of training, then flattens out: once the robot can stay upright for nearly the whole episode, it hits the 1,000-step ceiling and can't go higher, even as reward keeps climbing.
 
 | Iteration | Mean reward | Mean episode length (max 1,000 steps) |
 |-----------|-------------|---------------------------------------|
