@@ -44,15 +44,21 @@ reward already incentivises following the reference each frame.
 
 **New-code flag:** None — the retargeter and pipeline exist. If the spinkick
 reference is already in `.npz` form (check `pose-pipeline/motions/`), skip the
-retarget step. If only a `.pkl` exists, run `csv_to_npz` as below.
+retarget step. If only a `.pkl` exists, run the `pkl_to_csv` → `csv_to_npz` pipeline as below.
 
 **Train/record commands:**
 
 ```bash
 # Step 1 — retarget if needed (skip if .npz already present)
+# Confirm at run time whether csv_to_npz ingests the gmr .pkl directly or requires the pkl_to_csv CSV step.
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
+  python scripts/pkl_to_csv.py \
+  /workspace/pose-pipeline/g1_spinkick_example/spinkick.pkl \
+  /workspace/pose-pipeline/g1_spinkick_example/spinkick.csv'"
+
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && \
   python -m mjlab.scripts.csv_to_npz \
-  /workspace/pose-pipeline/g1_spinkick_example/spinkick.pkl \
+  /workspace/pose-pipeline/g1_spinkick_example/spinkick.csv \
   /workspace/pose-pipeline/motions/spinkick.npz'"
 
 # Step 2 — inspect the reference before training
@@ -126,9 +132,15 @@ edit, then `ruff format && ruff check --fix && pyright` before training.
 
 ```bash
 # Retarget jump reference
+# Confirm at run time whether csv_to_npz ingests the gmr .pkl directly or requires the pkl_to_csv CSV step.
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
+  python scripts/pkl_to_csv.py \
+  /workspace/pose-pipeline/<jump_source>.pkl \
+  /workspace/pose-pipeline/<jump_source>.csv'"
+
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && \
   python -m mjlab.scripts.csv_to_npz \
-  /workspace/pose-pipeline/<jump_source>.pkl \
+  /workspace/pose-pipeline/<jump_source>.csv \
   /workspace/pose-pipeline/motions/jump.npz'"
 
 # Inspect before training
@@ -160,6 +172,8 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python
 
 ```bash
 # Train (task reward, after new term is in container)
+# Note: `air_phase_bonus` is a placeholder term name — the actual reward key must be set when the new
+# reward term is written and registered in mjlab; update the flag name before running.
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjlab.scripts.train \
   Mjlab-Velocity-Flat-Unitree-G1 \
   \"--env.commands.twist.ranges.lin-vel-x=(0.0, 0.0)\" \
@@ -171,7 +185,8 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjla
   --agent.num-envs 4096 \
   --agent.max-iterations 5000'"
 
-# Record
+# Record (no --termination-threshold or --disable-terminations needed here: this is a velocity-task env,
+# which does not use tracking termination thresholds; the episode ends on fall or time-out, not pose-drift.)
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
   --task Mjlab-Velocity-Flat-Unitree-G1 \
   --checkpoint logs/rsl_rl/g1_velocity/<timestamp>/model_<best_iter>.pt \
@@ -226,9 +241,15 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
   --input /workspace/pose-pipeline/dance_source.pkl \
   --output /workspace/pose-pipeline/outputs/gmr_pkl/dance_g1.pkl'"
 
+# Confirm at run time whether csv_to_npz ingests the gmr .pkl directly or requires the pkl_to_csv CSV step.
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
+  python scripts/pkl_to_csv.py \
+  /workspace/pose-pipeline/outputs/gmr_pkl/dance_g1.pkl \
+  /workspace/pose-pipeline/outputs/gmr_pkl/dance_g1.csv'"
+
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && \
   python -m mjlab.scripts.csv_to_npz \
-  /workspace/pose-pipeline/outputs/gmr_pkl/dance_g1.pkl \
+  /workspace/pose-pipeline/outputs/gmr_pkl/dance_g1.csv \
   /workspace/pose-pipeline/motions/dance.npz'"
 
 # Step 2 — inspect reference
@@ -236,7 +257,7 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python
   --motion /workspace/pose-pipeline/motions/dance.npz \
   --output /workspace/clips/tier2_dance_reference.mp4'"
 
-# Step 3 — train
+# Step 3 — train (start at 0.5 m; raise to 0.75 m if repeatedly terminated before a full cycle completes)
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjlab.scripts.train \
   Mjlab-Tracking-Flat-Unitree-G1 \
   --env.commands.motion.motion-file /workspace/pose-pipeline/motions/dance.npz \
