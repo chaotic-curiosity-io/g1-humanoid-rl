@@ -20,11 +20,13 @@ Read them in order:
 
 ## Media
 
-Plots and frame stills are committed under [`assets/`](assets). The full **videos**
-(the learning progression and the A/B gait clips) are intentionally **not**
-committed — they're large and git-ignored. They live on the training host under
-`~/robotic-simulation/out/arc/` and are pulled to `assets/*.mp4` locally for
-viewing. Each report shows the command to re-generate them.
+Plots, frame stills, **and the videos** are committed under [`assets/`](assets) and
+embedded directly in the reports: the learning progression (chase / side / 2×2 grid)
+in report 01, and the A/B gait clips in report 03. The repo's `.gitignore` blanket-
+ignores `**/*.mp4` but explicitly re-includes `docs/reports/assets/*.mp4` so these
+publish to the Pages site while training-run videos elsewhere stay out of git. The
+source clips live on the training host under `~/robotic-simulation/out/arc/`; each
+report shows the command to re-generate them.
 
 ## How these were produced
 

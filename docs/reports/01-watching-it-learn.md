@@ -8,6 +8,13 @@
 
 The baseline training run covered in this series ran for **2,050 iterations**, saving a snapshot of the [policy](00-primer.md) every 50 iterations — 42 snapshots in total. Playing those snapshots back in order is like a time-lapse of learning. Three moments tell the story.
 
+<video controls loop muted playsinline preload="metadata" width="100%" poster="assets/still_final.png">
+  <source src="assets/chase.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/chase.mp4">download the clip</a> instead.
+</video>
+
+*The whole run, time-lapsed: 24 checkpoints replayed in order from a chase camera. The robot goes from collapsing in under a second to a steady, on-heading walk. The three stills below freeze three moments from this exact progression.*
+
 ---
 
 ### Iteration 0 — random twitching
@@ -93,6 +100,22 @@ MUJOCO_GL=egl python -m mjlab.scripts.record_learning_progression \
 ```
 
 Note: the task ID (`Mjlab-Velocity-Flat-Unitree-G1`) must be supplied explicitly. Both G1 tasks — flat terrain and rough terrain — share the experiment name `g1_velocity`, so the script cannot auto-detect which task produced a given run directory.
+
+That `--cameras chase,side` produced the chase view at the top of this report plus a side view, and the script also stitches a 2×2 grid. Here are the other two outputs from the same run:
+
+**Side view** — makes gait asymmetries and posture easier to judge:
+
+<video controls loop muted playsinline preload="metadata" width="100%" poster="assets/still_final.png">
+  <source src="assets/side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/side.mp4">download the clip</a> instead.
+</video>
+
+**2×2 grid** — four checkpoints side by side, so you can see early-vs-late behavior at a glance:
+
+<video controls loop muted playsinline preload="metadata" width="100%" poster="assets/still_mid.png">
+  <source src="assets/grid.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/grid.mp4">download the clip</a> instead.
+</video>
 
 ---
 

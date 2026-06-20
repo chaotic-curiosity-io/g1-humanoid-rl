@@ -22,6 +22,9 @@ logs/
 **/*.mp4
 **/*.gif
 
+# ...except the report videos, which ARE published (embedded in docs/reports)
+!docs/reports/assets/*.mp4
+
 # Large downloads (reproducible per setup-notes.md)
 mjlab/
 pose-pipeline/assets/

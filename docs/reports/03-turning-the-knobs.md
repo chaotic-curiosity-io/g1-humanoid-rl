@@ -48,17 +48,23 @@ The plot above shows **training-time speed-tracking error** — how far each pol
 
 A reward number is one window into a policy. To understand what the policy actually *does*, you have to watch it move. We commanded **both** final policies to walk forward at **1.0 m/s** — a brisk walk that is comfortably within the control's training range, but **double the tweak's training maximum**. The tweak had never, in its entire 1,500-iteration training history, been asked to go this fast.
 
-The videos (`assets/ab_control.mp4`, `assets/ab_tweak.mp4`) tell the story most clearly. The stills below give the gist.
+The clips below — both commanded to the same 1.0 m/s — tell the story most clearly. Watch the heading: the control holds its line; the slow-trained policy drifts.
 
 **Control policy — asked to walk at 1.0 m/s:**
 
-![Control policy walking at 1.0 m/s](assets/ab_control_still.png)
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/ab_control_still.png">
+  <source src="assets/ab_control.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/ab_control.mp4">download the clip</a> instead.
+</video>
 
 The control strides forward confidently and stays on-heading. The robot's posture is upright and the motion looks purposeful. This is exactly what the control was trained to do — 1.0 m/s was in the middle of its practice range.
 
 **Slow-trained policy — asked to walk at 1.0 m/s:**
 
-![Slow-trained (tweak) policy walking at 1.0 m/s](assets/ab_tweak_still.png)
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/ab_tweak_still.png">
+  <source src="assets/ab_tweak.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/ab_tweak.mp4">download the clip</a> instead.
+</video>
 
 The tweak does not fall over — that is worth saying honestly. The slow training still produced a policy that knows how to stay upright, and the basic stabilization skills generalize to some degree. But the tweak drifts off-heading and moves hesitantly. It was never taught to coordinate its legs at this speed, so it handles the command poorly. The videos make the heading drift especially clear.
 
