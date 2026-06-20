@@ -42,7 +42,7 @@ Concrete analogies are preferred over mathematical notation. Each report is stan
 
 | Stage | What runs on the Spark | Estimated cost | Output |
 |---|---|---|---|
-| **Retarget reference** | Run `smpl_backflip_to_g1.py` to convert MimicKit's backflip `.pkl` → G1 `.pkl`; then `mjlab.scripts.csv_to_npz` to produce `backflip.npz`; visually inspect duration and single-flip integrity via `play_motion_npz.py` | ~5–15 minutes (CPU, no GPU) | `backflip.npz` reference motion; confirmed single flip, feasible duration |
+| **Retarget reference** | Run `smpl_backflip_to_g1.py` to convert MimicKit's backflip `.pkl` → G1 `.pkl`; then `pkl_to_csv.py` to produce a `.csv`; then `mjlab.scripts.csv_to_npz` to produce `backflip.npz` (confirm at run time whether `csv_to_npz` ingests the gmr `.pkl` directly or requires the `pkl_to_csv` CSV step); visually inspect duration and single-flip integrity via `play_motion_npz.py` | ~5–15 minutes (CPU, no GPU) | `backflip.npz` reference motion; confirmed single flip, feasible duration |
 | **Train (iterA — initial attempt)** | `mjlab.scripts.train Mjlab-Tracking-Flat-Unitree-G1` with the retargeted `backflip.npz`, 0.5 m termination thresholds, 4096 envs, 20000 iterations | ~8–12 h GPU (the spine's heaviest run; the cartwheel took ~11 h) | Checkpoint `model_19999.pt`; W&B run; `params/env.yaml` confirming thresholds |
 | **Record + visual review** | `record_policy.py --termination-threshold 0.5` (matching training) or `--disable-terminations`; frame-by-frame review of the rendered video | ~10 minutes (CPU-runnable) | Multi-camera MP4s; pass/fail visual verdict |
 | **Iterate if needed (iterB, iterC…)** | Adjust reference duration/quality or threshold and retrain — expected from cartwheel precedent | Additional ~hours per iter | Improved checkpoint; updated visual verdict |
@@ -66,9 +66,15 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && python scripts/smpl_
 This writes the retargeted pkl to `/workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.pkl`. Then convert it to the NPZ format that mjlab's tracking task expects:
 
 ```bash
+# Confirm at run time whether csv_to_npz ingests the gmr .pkl directly or requires the pkl_to_csv CSV step.
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
+  python scripts/pkl_to_csv.py \
+  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.pkl \
+  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.csv'"
+
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && \
   python -m mjlab.scripts.csv_to_npz \
-  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.pkl \
+  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.csv \
   /workspace/pose-pipeline/motions/backflip.npz'"
 ```
 
