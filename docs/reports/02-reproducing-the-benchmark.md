@@ -107,7 +107,7 @@ An [episode](00-primer.md) ends in one of two ways, as defined in [00-primer.md]
 - **`time_out`** — the robot survived the full ~20 simulated seconds (1,000 steps). This is success.
 - **`fell_over`** — the torso touched the ground before the timer expired. The episode is cut short, and the robot earns no more reward for that attempt.
 
-Early in training, nearly every episode ends with `fell_over` — the robot collapses almost immediately and the episodes are very short (recall: 173 steps average at iteration 500). By the end of training, almost every episode ends with `time_out` — the robot runs the full clock. That transition from `fell_over`-dominated to `time_out`-dominated is exactly what drives the episode length curve from 173 to 988.
+Early in training, nearly every episode ends with `fell_over` — the robot collapses almost immediately and the episodes are very short (in our control run, an average of 162 steps at iteration 500). By the end of training, almost every episode ends with `time_out` — the robot runs the full clock. That transition from `fell_over`-dominated to `time_out`-dominated is exactly what drives the episode length curve from 162 to 988.
 
 ---
 
