@@ -127,13 +127,19 @@ Environment setup + baseline training for the mjlab G1 velocity demo went cleanl
 
 Smoke tests confirm the Spark stack is ready. The critical finding is that the velocity-range override requires patching all three curriculum stages, not just the command range. Tasks 3–5 must use the 4-flag form above for any `lin_vel_x` override.
 
-### Next session: sprinter tweak + playback
+## 2026-06-19 — Session 2 execution (learning-arc reports)
 
-1. Restart co-tenant quiescence (docker stop + sudo systemctl stop comfyui + sudo swapoff -a) and kill the idle mjlab-dev training if any.
-2. Create a branch in `/workspace/mjlab` so we don't lose the baseline config: `cd /workspace/mjlab && git checkout -b sprinter`
-3. Edit `src/mjlab/tasks/velocity/config/unitree_g1/flat_env_cfg.py` — change `lin_vel_x=(-1.0, 1.0)` to `lin_vel_x=(-2.5, 2.5)`.
-4. Train: same command as baseline. Target ~2000 iters, expect reward plateau lower than baseline due to harder task.
-5. Record sprinter W&B run path.
-6. `git checkout main` to get back to baseline config.
-7. Play both: `python -m mjlab.scripts.play Mjlab-Velocity-Flat-Unitree-G1 --wandb-run-path donb-chaotic-curiosity/mjlab/<run-id> --num-envs 8` — view at http://localhost:8081.
-8. Grab a W&B comparison report from the web UI and screen-capture both playbacks.
+Built a 4-part beginner learning series (`docs/reports/00–03`) backed by real runs, on branch `g1-walking-learning-arc`. (This replaces the earlier "sprinter via flat_env_cfg.py edit" stub — we did a CLI-override **slow** tweak instead, no source edit.)
+
+**Runs** (both fresh from scratch, 1500 iters @ 2048 envs, seed 42, ~26 min each):
+- **Control** `arc-control` → `logs/rsl_rl/g1_velocity/2026-06-19_07-39-36_arc-control`, final reward **38.43**, ep len ~988, W&B `donb-chaotic-curiosity/mjlab/5zkg1dh7`. Reproduces the Session-1 baseline — curves overlap at matched iters (500→2.9 vs 3.3, 900→19.5 vs 21.3, 1400→36.0 vs 31.5).
+- **Tweak** `arc-tweak-slow` → `logs/rsl_rl/g1_velocity/2026-06-20_00-36-34_arc-tweak-slow`, `lin_vel_x` pinned to (-0.5, 0.5) via the 4-flag override. Final reward **57.84** — *higher* than control because the slow-only task is easier (the A/B's central lesson: higher reward ≠ better robot). Commanded to 1.0 m/s (2× its training max) it drifts off-heading rather than striding.
+
+**Host-prep deviation:** sudo is NOT passwordless on the Spark, so `swapoff -a` / `systemctl stop comfyui` could not run non-interactively. Instead: stopped the 3 co-tenant containers (docker, no sudo) and ran with live `free -h` monitoring — with ~110 GiB free for a ~13 GiB workload, swap never engaged. Restored co-tenants after with `docker start` (no swapon needed).
+
+**Gotchas / learnings:**
+- **Flat task curriculum is ACTIVE** (contradicts the earlier "curriculum off for flat" assumption): `command_vel` stage-0 fires at step 0 and resets `lin_vel_x` to (-1,1), clobbering a plain override. Must pin all 3 stages too (see the recon block's 4-flag form above).
+- **Background-watcher self-match:** `pgrep -f mjlab.scripts.train` (or any `grep`/count) matches its OWN command line → loops forever / false counts. Use the bracket trick: `ps -eo cmd | grep "[p]ython -u -m mjlab.scripts.train"`.
+- **ffmpeg** was missing in the container → installed once via `apt-get install -y ffmpeg`.
+
+**New committed artifacts:** `scripts/plot_training_curves.py` (tensorboard → CSV + curve PNGs); `docs/reports/00–03` + `docs/reports/assets/*.png` (plots + frame stills — MP4s gitignored, pulled to `assets/*.mp4`, originals on the Spark at `~/robotic-simulation/out/arc/`); design spec + plan under `docs/superpowers/{specs,plans}/2026-06-18-g1-walking-learning-arc*`.

@@ -32,6 +32,7 @@ docs/
   cartwheel-journey.md       — iteration-by-iteration log of the cartwheel training, written for a non-technical reader
   session-01-writeup.md      — end-to-end walkthrough of setting up mjlab on the DGX Spark and training the baseline walking policy
   dgx-spark-manual.md        — local copy of the DGX Spark setup manual (April 2026)
+  reports/                   — 4-part beginner-friendly learning series on walking RL (start at docs/reports/README.md)
 scripts/
   record_policy.py           — headless multi-camera renderer for a trained tracking/velocity policy; supports --disable-terminations and telemetry dump
   play_motion_npz.py         — headless replay of a tracking motion.npz (reference motion, no policy)
@@ -39,6 +40,7 @@ scripts/
   smpl_backflip_to_g1.py     — custom SMPL→G1 retargeter that bypasses SMPL-X body-model weights by using MimicKit's shipped smpl.xml MJCF for forward kinematics; plugs directly into GMR's IK
   record_learning_progression.py — multi-checkpoint, multi-camera progression recorder (stitches one MP4 per angle + optional 2×2 grid from N evenly-spaced checkpoints)
   watch_learning.py          — host-side helper that loads 8 checkpoints into one 1024-env Viser scene, routing each 128-env block to a different policy
+  plot_training_curves.py    — tensorboard training scalars → CSV + curve PNGs; overlays multiple runs for comparison (used by the docs/reports series)
 CLAUDE.md                    — project conventions and gotchas for any Claude Code session working in this tree
 setup-notes.md               — append-as-we-go log of actual setup deviations per session
 .gitignore                   — keeps secrets, checkpoints, caches, and downloaded datasets out of the repo
