@@ -30,6 +30,6 @@ viewing. Each report shows the command to re-generate them.
 
 - The curve plots come from `scripts/plot_training_curves.py` (tensorboard → PNG).
 - Full method and decisions: the design spec
-  [`docs/superpowers/specs/2026-06-18-g1-walking-learning-arc-design.md`](../superpowers/specs/2026-06-18-g1-walking-learning-arc-design.md)
+  [`2026-06-18-g1-walking-learning-arc-design.md`](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-18-g1-walking-learning-arc-design.md)
   and the implementation plan
-  [`docs/superpowers/plans/2026-06-18-g1-walking-learning-arc.md`](../superpowers/plans/2026-06-18-g1-walking-learning-arc.md).
+  [`2026-06-18-g1-walking-learning-arc.md`](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/plans/2026-06-18-g1-walking-learning-arc.md).

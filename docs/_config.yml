@@ -1,0 +1,15 @@
+title: Teaching a Humanoid to Walk
+description: A hands-on, zero-background guide to reinforcement learning on a Unitree G1 humanoid
+theme: jekyll-theme-cayman
+
+# The internal spec/plan are kept in the repo but excluded from the published
+# site (the plan contains Liquid-conflicting `{{ }}` strings, and they're not
+# reader-facing). All published pages get the theme's default layout.
+exclude:
+  - superpowers/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
