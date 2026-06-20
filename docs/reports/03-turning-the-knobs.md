@@ -40,7 +40,7 @@ A sprinter's score in a 100-meter dash cannot be compared to a jogger's score in
 
 ![Speed-tracking error during training — control vs. slow-trained tweak](assets/ab_speed_tracking_error.png)
 
-The velocity-tracking error plot above confirms this. The tweak's tracking error is lower throughout training — it is better at matching its commanded speed, because it was commanded a speed it could easily match. Lower error is better tracking; but the tweak achieved lower error by being given an easier target, not by being a more capable walker.
+The plot above shows **training-time speed-tracking error** — how far each policy strayed from its commanded speed while learning, not the 1.0 m/s evaluation shown later. The tweak's error is lower throughout training because it only ever chased slow, easy targets, while the control's error is higher because it chased the full range of faster targets. Lower error is better tracking, but the tweak achieved lower error by being given an easier task, not by being a more capable walker.
 
 ---
 
@@ -73,6 +73,8 @@ Changing the commanded speed range is one knob. Here is a menu of others — eac
 ```bash
 python -m mjlab.scripts.train <task-id> [flags]
 ```
+
+*Note: flag names and syntax can vary by mjlab version — before copying a command, run `python -m mjlab.scripts.train <task-id> --help` inside the container to check the current available flags.*
 
 ### Commanded speed range (what we just did)
 
