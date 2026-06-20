@@ -122,36 +122,43 @@ Replace `<timestamp>` with the actual run directory printed by the trainer at st
 
 ### Step 3 — Record at matched threshold (or with terminations off)
 
-**Critical:** the render threshold must match or relax the training threshold. If training used 0.5 m but the render uses the default 0.25 m, every backflip attempt is cut short mid-flip on screen — the exact bug that made iter B's video look like repeated failures even though the policy was making genuine progress. Use `--termination-threshold 0.5` to match training exactly, or `--disable-terminations` to run the policy continuously and see its full behavior.
+**Prerequisite:** `record_policy.py` is not present in the container. Copy it before recording:
+
+```bash
+scp scripts/record_policy.py spark:/tmp/
+ssh spark "docker cp /tmp/record_policy.py mjlab-dev:/workspace/scripts/record_policy.py"
+```
+
+**Critical:** the render threshold must match or relax the training threshold. If training used 0.5 m but the render uses the default 0.25 m, every backflip attempt is cut short mid-flip on screen — the exact bug that made iter B's video look like repeated failures even though the policy was making genuine progress. Use `--termination-threshold 0.5` to match training exactly, or `--disable-terminations 1` to run the policy continuously and see its full behavior.
 
 ```bash
 # Match training threshold (recommended first pass):
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Tracking-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
+  --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+  --checkpoint-file logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
+  --motion-file /workspace/pose-pipeline/motions/backflip.npz \
   --termination-threshold 0.5 \
-  --no-shadows --no-reflections --no-debug-viz \
-  --output /workspace/clips/s2_iterA_side.mp4'"
+  --output-dir /workspace/clips/s2_iterA_side'"
 
 # Alternatively — disable terminations to see continuous policy behavior:
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Tracking-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
-  --disable-terminations \
-  --no-shadows --no-reflections --no-debug-viz \
-  --output /workspace/clips/s2_iterA_noterminations.mp4'"
+  --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+  --checkpoint-file logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
+  --motion-file /workspace/pose-pipeline/motions/backflip.npz \
+  --disable-terminations 1 \
+  --output-dir /workspace/clips/s2_iterA_noterminations'"
 ```
 
 Record multiple camera angles for the final confirmed policy (chase, side, front, top, grid):
 
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Tracking-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
-  --disable-terminations \
-  --no-shadows --no-reflections --no-debug-viz \
+  --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+  --checkpoint-file logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
+  --motion-file /workspace/pose-pipeline/motions/backflip.npz \
+  --disable-terminations 1 \
   --cameras chase side front top grid \
-  --output /workspace/clips/s2_final_{camera}.mp4'"
+  --output-dir /workspace/clips/s2_final'"
 ```
 
 Pull all clips to the Windows box:
@@ -167,11 +174,12 @@ Run `score_cartwheel.py` to get a numerical completion count, but treat the numb
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
   MUJOCO_GL=egl python scripts/record_policy.py \
-    --task Mjlab-Tracking-Flat-Unitree-G1 \
-    --checkpoint logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
-    --disable-terminations \
-    --telemetry /workspace/clips/s2_telemetry.npz \
-    --output /workspace/clips/s2_for_scoring.mp4 && \
+    --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+    --checkpoint-file logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
+    --motion-file /workspace/pose-pipeline/motions/backflip.npz \
+    --disable-terminations 1 \
+    --dump-telemetry /workspace/clips/s2_telemetry.npz \
+    --output-dir /workspace/clips/s2_for_scoring && \
   python scripts/score_cartwheel.py --telemetry /workspace/clips/s2_telemetry.npz'"
 ```
 

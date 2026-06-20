@@ -29,7 +29,7 @@ This report is written for someone with no background in robotics or machine lea
 | Stage | What runs on the Spark | Estimated cost | Output |
 |---|---|---|---|
 | **Replay control** | Load existing `model_2050.pt` via `mjlab.scripts.play`; record a short side-view clip at 1.0 m/s commanded speed | Seconds | Baseline clip showing the walking gait — no flight phase |
-| **Train fast runner** | Fresh `Mjlab-Velocity-Flat-Unitree-G1` from scratch with high `lin_vel_x` range + three curriculum-stage overrides + bumped `feet_air_time` weight | ~1–1.5 h GPU | New checkpoint (`model_<N>.pt`); W&B run; `params/env.yaml` confirming the overrides landed |
+| **Train fast runner** | Fresh `Mjlab-Velocity-Flat-Unitree-G1` from scratch with high `lin_vel_x` range + three curriculum-stage overrides + bumped `air_time` weight | ~1–1.5 h GPU | New checkpoint (`model_<N>.pt`); W&B run; `params/env.yaml` confirming the overrides landed |
 | **Record A/B clips** | `record_policy.py` on both policies (control `model_2050.pt` and the fast runner's best checkpoint), same commanded speed (e.g. 1.5 m/s), side and chase cameras | Minutes; CPU-runnable | Two short MP4s for the A/B comparison in the report |
 | **Cadence plot** | `plot_training_curves.py` or `record_policy.py` telemetry → cadence-vs-commanded-speed PNG | Minutes | One PNG embedded in `running-and-flight.md` |
 
@@ -43,12 +43,15 @@ All commands are issued from the Windows host and execute inside `mjlab-dev` on 
 
 ### Step 1 — Replay the control walker
 
+> **⚠ Verified (Task 12): `record_policy.py` is TRACKING-ONLY (requires `--motion-file`) and cannot be used for this velocity policy.** The commands shown below are placeholders; the correct velocity recording tool must be selected in the S1 training plan. `record_learning_progression.py` produced the existing walking-report clips and is the natural candidate. See Open questions for the deferred decision.
+
 ```bash
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Velocity-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/model_2050.pt \
-  --no-shadows --no-reflections --no-debug-viz \
-  --output /workspace/clips/s1_control_walk.mp4'"
+# PLACEHOLDER — record_policy.py does not support the velocity task.
+# Replace with the appropriate velocity recorder (e.g. record_learning_progression.py)
+# before executing. Command shape shown for reference only.
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_learning_progression.py \
+  --run-dir logs/rsl_rl/g1_velocity/2026-04-17_18-46-23 \
+  --output-dir /workspace/clips/s1_control'"
 ```
 
 ### Step 2 — Train the fast runner (B)
@@ -62,7 +65,7 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjla
   \"--env.curriculum.command-vel.params.velocity-stages.0.lin-vel-x=(0.0, 3.0)\" \
   \"--env.curriculum.command-vel.params.velocity-stages.1.lin-vel-x=(0.0, 3.0)\" \
   \"--env.curriculum.command-vel.params.velocity-stages.2.lin-vel-x=(0.0, 3.0)\" \
-  --env.rewards.feet_air_time.weight 2.0 \
+  --env.rewards.air_time.weight 2.0 \
   --agent.max-iterations 2000 \
   --agent.seed 42'"
 ```
@@ -77,22 +80,20 @@ Replace `<timestamp>` with the actual run directory (printed by the trainer at s
 
 ### Step 3 — Record A/B clips
 
-Record both policies at the same commanded forward speed (e.g. 1.5 m/s) so the comparison is fair:
+> **⚠ Verified (Task 12): `record_policy.py` is TRACKING-ONLY (requires `--motion-file`) and is NOT suitable for velocity-task recording.** The A/B clip commands must use a velocity-capable recorder. The exact tool and flags are to be finalized in the S1 training plan. See Open questions below.
+
+Record both policies at the same commanded forward speed (e.g. 1.5 m/s) so the comparison is fair. Command shapes are placeholders — replace with the velocity recorder chosen in the training plan:
 
 ```bash
-# Control walker (A)
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Velocity-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/model_2050.pt \
-  --no-shadows --no-reflections --no-debug-viz \
-  --output /workspace/clips/s1_A_walker_1p5ms.mp4'"
+# Control walker (A) — PLACEHOLDER: replace record_policy.py with velocity recorder
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/<velocity-recorder>.py \
+  --run-dir logs/rsl_rl/g1_velocity/2026-04-17_18-46-23 \
+  --output-dir /workspace/clips/s1_A_walker_1p5ms'"
 
 # Fast runner (B) — replace <timestamp> and <best_iter> with the actual values
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Velocity-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_velocity/<timestamp>/model_<best_iter>.pt \
-  --no-shadows --no-reflections --no-debug-viz \
-  --output /workspace/clips/s1_B_runner_1p5ms.mp4'"
+ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/<velocity-recorder>.py \
+  --run-dir logs/rsl_rl/g1_velocity/<timestamp> \
+  --output-dir /workspace/clips/s1_B_runner_1p5ms'"
 ```
 
 ### Step 4 — Cadence plot
@@ -121,7 +122,7 @@ scp spark:/workspace/plots/s1_cadence_vs_speed.png docs/reports/assets/
 
 **Treatment (B):** A fresh policy trained with:
 - Commanded `lin_vel_x` range raised to `(0.0, 3.0)` m/s, pinned via all three curriculum-stage overrides.
-- `feet_air_time` reward weight bumped (the weight value to use is an open question — see below; start with `2.0` and tune if the flight phase does not emerge).
+- `air_time` reward weight bumped to `2.0` (its baseline weight is **0.0** — the term is registered but inactive in the baseline run, so raising it activates a flight-phase incentive). Tune up or down if the flight phase does not emerge.
 - All other hyperparameters identical: same task (`Mjlab-Velocity-Flat-Unitree-G1`), same PPO, same network, same seed 42.
 
 **One changed family of knobs:** the commanded speed distribution and the air-time incentive. Everything else is held constant. This is the same "change exactly one thing" discipline that made report 03's result legible — here we extend it in the other direction (faster, not slower).
@@ -225,3 +226,5 @@ The following items were targeted for resolution by the read-only Spark probe in
    These match the CLAUDE.md snippet exactly.
 
 3. **Whether high speed needs episode-length or terrain adjustment — RESOLVED.** The baseline run's `episode_length_s: 20.0` at a decimation of 4 (50 Hz control) equals 1000 steps. At 3.0 m/s for 20 seconds the robot travels 60 m; the flat arena uses `env_spacing: 2.0` m per env with no explicit wall bounds visible in the YAML. This is a standard periodic/infinite flat plane, not a bounded arena — the robot can run indefinitely without hitting a wall. No episode-length or terrain adjustment is required for S1.
+
+4. **Velocity-task recorder — TO FINALIZE IN TRAINING PLAN.** `record_policy.py` is tracking-only (requires `--motion-file`) and cannot be used for the S1 velocity policy. The recording tool for Step 1 (control baseline clip) and Step 3 (A/B comparison clips) must be confirmed before those steps run. `record_learning_progression.py` produced the existing walking-report clips and is the most likely candidate; its exact flags and usage are documented in `scripts/record_learning_progression.py` and CLAUDE.md. Confirm the appropriate recorder and finalize the commands in the S1 training plan before recording.

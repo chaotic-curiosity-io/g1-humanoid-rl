@@ -65,6 +65,20 @@ The specimen runs can overlap with recording steps from other specimens since re
 
 ## Concrete runs
 
+> **⚠ Verified corrections (Task 12) — read before executing any command below.**
+>
+> **Reward terms:** `base_height` and `termination` do NOT exist as reward terms in the velocity task. The complete list of real velocity-task reward terms (verified from `logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/params/env.yaml`) is:
+> `track_linear_velocity`, `track_angular_velocity`, `upright`, `pose`, `body_ang_vel`, `angular_momentum`, `dof_pos_limits`, `action_rate_l2`, `air_time`, `foot_clearance`, `foot_swing_height`, `foot_slip`, `soft_landing`, `self_collisions`.
+> The CLI key for air-time is `--env.rewards.air_time.weight` (NOT `feet_air_time`); its baseline weight is **0.0**.
+>
+> **Specimen A impact:** the command `--env.rewards.base_height.weight 0.0` and `--env.rewards.termination.weight 0.0` are wrong — those terms do not exist. The diving-faceplant induction must zero `upright` (confirmed) and optionally `pose`; the final levers are to be set in the S4 training plan.
+>
+> **Specimen B impact:** there is no `base_height` reward term. To induce a jump-and-collapse, use `--env.rewards.air_time.weight 20.0` (high air-time incentive) instead. The `track_lin_vel_xy_exp` and `track_ang_vel_z_exp` keys in the Specimen B command also do not match the real term names (`track_linear_velocity` and `track_angular_velocity`). Final specimen reward levers are to be set in the S4 training plan.
+>
+> **Recording (Specimens A, B, C):** `record_policy.py` is tracking-only (requires `--motion-file`) and cannot be used for velocity-task specimens. A velocity-capable recorder (e.g. `record_learning_progression.py` or a new velocity variant of `record_policy.py`) must be chosen in the S4 training plan before capture commands can be finalized. Commands in the Capture steps below are placeholders.
+>
+> **Specimen D:** `record_policy.py` IS appropriate (tracking task). Before use, copy it to the Spark: `scp scripts/record_policy.py spark:/tmp/ && ssh spark "docker cp /tmp/record_policy.py mjlab-dev:/workspace/scripts/record_policy.py"`. Flag corrections: use `--task-id`, `--checkpoint-file`, `--motion-file`, `--output-dir`, and `--dump-telemetry` (not `--telemetry`); remove `--no-shadows`, `--no-reflections`, `--no-debug-viz` (do not exist).
+
 All commands are issued from the Windows host and execute inside `mjlab-dev` on the Spark.
 
 ---
@@ -235,12 +249,12 @@ A robot that runs into the ground at speed, tumbles face-first, and rolls along 
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
   MUJOCO_GL=egl python scripts/record_policy.py \
-    --task Mjlab-Tracking-Flat-Unitree-G1 \
-    --checkpoint logs/rsl_rl/g1_tracking/2026-04-19_20-54-47_cartwheel-iterC-single/model_19999.pt \
-    --disable-terminations \
-    --no-shadows --no-reflections --no-debug-viz \
-    --telemetry /workspace/clips/s4_D_telemetry.npz \
-    --output /workspace/clips/s4_D_for_scoring.mp4 && \
+    --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+    --checkpoint-file logs/rsl_rl/g1_tracking/2026-04-19_20-54-47_cartwheel-iterC-single/model_19999.pt \
+    --motion-file /workspace/pose-pipeline/motions/cartwheel.npz \
+    --disable-terminations 1 \
+    --dump-telemetry /workspace/clips/s4_D_telemetry.npz \
+    --output-dir /workspace/clips/s4_D_for_scoring && \
   python scripts/score_cartwheel.py --telemetry /workspace/clips/s4_D_telemetry.npz'"
 ```
 
@@ -255,12 +269,12 @@ Locate an intermediate checkpoint. Then:
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
   MUJOCO_GL=egl python scripts/record_policy.py \
-    --task Mjlab-Tracking-Flat-Unitree-G1 \
-    --checkpoint logs/rsl_rl/g1_tracking/<iterB-timestamp>/model_<N>.pt \
-    --disable-terminations \
-    --no-shadows --no-reflections --no-debug-viz \
-    --telemetry /workspace/clips/s4_D_iterB_telemetry.npz \
-    --output /workspace/clips/s4_D_iterB_for_scoring.mp4 && \
+    --task-id Mjlab-Tracking-Flat-Unitree-G1 \
+    --checkpoint-file logs/rsl_rl/g1_tracking/<iterB-timestamp>/model_<N>.pt \
+    --motion-file /workspace/pose-pipeline/motions/cartwheel.npz \
+    --disable-terminations 1 \
+    --dump-telemetry /workspace/clips/s4_D_iterB_telemetry.npz \
+    --output-dir /workspace/clips/s4_D_iterB_for_scoring && \
   python scripts/score_cartwheel.py --telemetry /workspace/clips/s4_D_iterB_telemetry.npz'"
 ```
 
