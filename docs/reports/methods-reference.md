@@ -29,19 +29,28 @@ A **reward term** is a single number added to the score the robot receives each 
 
 ### Velocity-tracking terms (`Mjlab-Velocity-Flat-Unitree-G1` / `Mjlab-Velocity-Rough-Unitree-G1`)
 
-In velocity tracking, the robot is given a commanded walking speed and rewarded for matching it. The following terms make up the reward.
+In velocity tracking, the robot is given a commanded walking speed and rewarded for matching it. The following terms make up the reward (verified against the baseline run's `params/env.yaml` on the Spark).
 
 | Term | What it rewards (plain language) |
 |---|---|
-| `track_lin_vel` | Walking at the commanded forward/sideways speed. The closer the actual speed to the commanded speed, the higher the score. This is the primary driving signal. |
-| `track_ang_vel` | Turning at the commanded yaw rate. Same idea: match the commanded spin. |
-| `feet_air_time` | Spending time in the air between steps. Rewards the policy for lifting each foot cleanly off the ground rather than shuffling or dragging. A higher weight on this term encourages a true flight phase (both feet briefly off the ground). |
-| `base_height` | Keeping the pelvis at a reasonable height above the ground. Discourages the robot from crouching all the way to the floor as a lazy way to stay balanced. |
+| `track_linear_velocity` | Walking at the commanded forward/sideways speed. The closer the actual speed to the commanded speed, the higher the score. This is the primary driving signal. |
+| `track_angular_velocity` | Turning at the commanded yaw rate. Same idea: match the commanded spin. |
+| `air_time` | Spending time in the air between steps. Rewards the policy for lifting each foot cleanly off the ground rather than shuffling or dragging. A higher weight on this term encourages a true flight phase (both feet briefly off the ground). CLI flag: `--env.rewards.air_time.weight`. |
 | `upright` | Keeping the torso vertical. Discourages the robot from leaning far forward or sideways. |
-| `action_rate` | Penalizes large, jerky changes in joint commands between steps. Encourages smooth, consistent motion. (This term is negative — it subtracts from the score — so the policy learns to avoid sudden snapping.) |
-| `joint_torques` | Penalizes high joint forces. Encourages the robot to move efficiently without straining its actuators. (Also negative.) |
+| `pose` | Keeping joint angles close to a nominal reference pose. Discourages extreme or unnatural limb positions. |
+| `body_ang_vel` | Penalizes excessive angular velocity of the base body. Encourages stable, controlled motion rather than spinning or tumbling. (Negative term.) |
+| `angular_momentum` | Penalizes whole-body angular momentum. Encourages the robot to move without spinning up undesirable rotational motion. (Negative term.) |
+| `dof_pos_limits` | Penalizes joint angles that approach or exceed their hardware limits. Protects actuators and encourages physically realistic motion. (Negative term.) |
+| `action_rate_l2` | Penalizes large, jerky changes in joint commands between steps. Encourages smooth, consistent motion. (Negative term.) |
+| `foot_clearance` | Rewards lifting each foot sufficiently during the swing phase to clear the ground. Discourages dragging or shuffling steps. |
+| `foot_swing_height` | Rewards appropriate foot height during the swing arc. Encourages a natural step trajectory. |
+| `foot_slip` | Penalizes lateral foot movement while the foot is in contact with the ground. Encourages clean ground contact without sliding. (Negative term.) |
+| `soft_landing` | Rewards gentle foot-to-ground contact velocity. Discourages heavy, stomping landings. |
+| `self_collisions` | Penalizes the robot's links colliding with each other. Discourages physically impossible self-intersecting poses. (Negative term.) |
 
-**Note on exact key paths:** the terms listed above appear in the specs and source references for this repo. The precise YAML config path for each term (e.g. `--env.rewards.feet_air_time.weight`) is confirmed by reading `params/env.yaml` inside a saved run directory on the Spark. The `feet_air_time` term's weight can be overridden at the command line; see the S1 running spec for the exact flag.
+**Note on base height:** there is **no standalone `base_height` reward term** in the velocity task. Height is shaped indirectly through the `upright`, `pose`, and termination logic rather than a dedicated height penalty.
+
+**Note on exact key paths:** the terms and CLI paths above are confirmed by reading `params/env.yaml` inside the baseline run directory on the Spark (`logs/rsl_rl/g1_velocity/2026-04-17_18-46-23/`). Example override: `--env.rewards.air_time.weight 2.0`.
 
 ### Motion-tracking terms (`Mjlab-Tracking-Flat-Unitree-G1`)
 
@@ -257,13 +266,16 @@ docker cp /tmp/foo.py mjlab-dev:/workspace/scripts/
 
 ### `record_policy.py`
 
-**What it does:** Headless multi-camera renderer for a single trained policy (tracking or velocity). Drives a 1-environment play-mode session, runs the policy for N steps, and records offscreen frames from preset camera angles (chase, side, front, top). Writes one MP4 per angle plus an optional 2×2 grid composite. Also dumps a telemetry `.npz` (pelvis position/quaternion, reset signal, fps) for downstream scoring.
+**What it does:** Headless multi-camera renderer for a single trained **tracking** policy. Drives a 1-environment play-mode session, runs the policy for N steps, and records offscreen frames from preset camera angles (chase, side, front, top). Writes one MP4 per angle plus an optional 2×2 grid composite. Also dumps a telemetry `.npz` (pelvis position/quaternion, reset signal, fps) for downstream scoring.
+
+**Important: tracking-only.** This script requires a `--motion-file` reference motion and is hardcoded to `Mjlab-Tracking-Flat-Unitree-G1`. It does **not** support the velocity task. It is also not currently present inside `mjlab-dev` and must be `docker cp`'d in before use. For velocity-policy recording, use `record_learning_progression.py` (see below) — the dedicated velocity recorder is an open item in the S1 training plan.
 
 **Key flags:**
+- `--motion-file <path>` — required; path to the `motion.npz` reference file the tracking task was trained on.
 - `--disable-terminations` — runs the policy without any non-timeout terminations (best for honest evaluation of what the policy actually does).
 - `--termination-threshold <value>` — sets the `anchor_pos` / `ee_body_pos` thresholds at render time. Must match the training threshold; otherwise the render cuts episodes short.
 
-**When to use it:** after training a tracking or velocity policy, for the A/B comparison clips in reports, and for producing the telemetry file that feeds `score_cartwheel.py`. CPU-runnable while a training job owns the GPU.
+**When to use it:** after training a tracking policy (e.g. cartwheel), for the A/B comparison clips in tracking reports, and for producing the telemetry file that feeds `score_cartwheel.py`. CPU-runnable while a training job owns the GPU.
 
 ---
 

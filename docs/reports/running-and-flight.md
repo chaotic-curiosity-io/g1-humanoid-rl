@@ -27,7 +27,7 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjla
   \"--env.curriculum.command-vel.params.velocity-stages.0.lin-vel-x=(0.0, 3.0)\" \
   \"--env.curriculum.command-vel.params.velocity-stages.1.lin-vel-x=(0.0, 3.0)\" \
   \"--env.curriculum.command-vel.params.velocity-stages.2.lin-vel-x=(0.0, 3.0)\" \
-  --env.rewards.feet_air_time.weight 2.0 \
+  --env.rewards.air_time.weight 2.0 \
   --agent.max-iterations 2000 \
   --agent.seed 42'"
 ```
@@ -60,6 +60,8 @@ The training curve for the fast runner will be shown here, alongside the control
 
 *Fast runner (B) — commanded at the same 1.5 m/s: this will show the newly trained policy at the same speed. The question is visible in the clip: do both feet leave the ground?*
 
+*(Note on recording: `record_policy.py` is tracking-only and does not support the velocity task. The velocity-policy recorder for these clips is TBD — `record_learning_progression.py` is the current candidate; the exact tool is selected in the S1 training plan.)*
+
 ### Cadence and step-length plot
 
 **[Placeholder: cadence-vs-speed plot — `assets/s1_cadence_vs_speed.png`]**
@@ -86,7 +88,7 @@ Once the S1 run lands and this report is populated, here are the knobs worth tur
 # ... (repeat for stages 1 and 2)
 ```
 
-**Airtime weight** — the spec used `--env.rewards.feet_air_time.weight 2.0` as a starting point. Crank it higher and the robot will prioritize getting its feet off the ground even more aggressively — possibly at the expense of forward speed or stability. Drop it to zero and see how much of the running gait survives without that explicit push.
+**Airtime weight** — the spec used `--env.rewards.air_time.weight 2.0` as a starting point. Crank it higher and the robot will prioritize getting its feet off the ground even more aggressively — possibly at the expense of forward speed or stability. Drop it to zero and see how much of the running gait survives without that explicit push.
 
 **Training duration** — the fast run used 2,000 iterations. The baseline walker was improving at 2,050 iterations and had not plateaued. Does the fast runner's flight phase become cleaner with more training, or does it emerge early and stay roughly stable?
 
