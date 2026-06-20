@@ -34,7 +34,7 @@ MUJOCO_GL=egl CUDA_VISIBLE_DEVICES=0 \
   --agent.run-name arc-control
 ```
 
-Key flags: `--env.scene.num-envs 2048` runs 2,048 copies of the robot in parallel (more robots = more experience per [PPO](00-primer.md) update); `--agent.max-iterations 1500` stops after 1,500 iterations (the original baseline ran to 2,050 — we ran shorter to confirm reproducibility without duplicating the full cost). We used **seed 42** — the same as the baseline — to keep the intended random choices (weight initialization, episode resets) aligned. The run took approximately **26 minutes**, about 1 second per iteration, on a single NVIDIA GB10 GPU.
+Key flags: `--env.scene.num-envs 2048` runs 2,048 copies of the robot in parallel (more robots = more experience per [PPO](00-primer.md) update); `--agent.max-iterations 1500` stops after 1,500 iterations (the original baseline ran to 2,050 — we ran shorter to confirm reproducibility without duplicating the full cost). We used **seed 42** — the same as the baseline — to keep the intended random choices (weight initialization, episode resets) aligned. We didn't pass a seed flag in the command above; 42 is the framework's default, and both the original baseline and our control run used that default, so the command reproduces the exact same starting randomness. The run took approximately **26 minutes**, about 1 second per iteration, on a single NVIDIA GB10 GPU.
 
 ---
 
@@ -62,7 +62,7 @@ The baseline ran longer (to 2,050 iterations, reaching a final reward of 50.5), 
 
 ### A note on the small differences
 
-The numbers are close but not identical. At iteration 1,400, for example, the control (36.0) is slightly *ahead* of the baseline (31.5), before converging again. These small run-to-run differences are **expected and honest** — they come from GPU nondeterminism (the order in which thousands of floating-point operations are accumulated on the GPU can change subtly between runs, even with the same seed) and from slightly different random episode resets. If the two curves were *perfectly* identical, that would actually be suspicious — it would suggest something was cached or the runs were not truly independent.
+The numbers are close but not identical. At iteration 1,400, for example, the control (36.0) is slightly *ahead* of the baseline (31.5), before converging again. Don't read too much into which run is momentarily ahead at any single checkpoint — in the refinement phase, run-to-run randomness means either run can edge the other; what matters is that both follow the same curve. These small run-to-run differences are **expected and honest** — they come from GPU nondeterminism (the order in which thousands of floating-point operations are accumulated on the GPU can change subtly between runs, even with the same seed) and from slightly different random episode resets. If the two curves were *perfectly* identical, that would actually be suspicious — it would suggest something was cached or the runs were not truly independent.
 
 What matters for reproducibility is the **shape and ballpark**: the same slow start, the same sharp climb in the same window, the same refinement trajectory. Both runs do this. The result is real.
 
