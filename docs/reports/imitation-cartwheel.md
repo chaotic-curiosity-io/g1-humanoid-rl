@@ -1,6 +1,6 @@
 # Imitation Learning: Teaching G1 to Cartwheel
 
-> **Draft.** This report is populated after the cartwheel campaign is fully written up in report form (see [the spec](../superpowers/specs/2026-06-19-spine-backflip.md) for the Imitation track plan). The structure below is the skeleton it will fill. The detailed iteration-by-iteration log of the cartwheel campaign already exists as a separate document — linked prominently below.
+> **Draft.** This report is populated after the cartwheel campaign is fully written up in report form (see the [Imitation-track spec](../superpowers/specs/2026-06-19-spine-backflip.md) for the track plan, and [cartwheel-journey.md](../cartwheel-journey.md) for the full campaign record). The structure below is the skeleton it will fill.
 
 *This report is the Imitation track's entry point. It introduces motion imitation as a training method and summarizes the cartwheel campaign. The backflip — the Imitation track's spine task — is covered in the next report: [imitation-backflip.md](imitation-backflip.md).*
 
