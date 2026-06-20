@@ -101,7 +101,7 @@ Replace `<timestamp>` with the run directory printed by the trainer at startup. 
 
 **[Placeholder: reward curve plot — `assets/s2_reward_curve.png`]**
 
-*Mean reward over 20,000 training iterations. The cartwheel precedent (iterA: stuck around 3–5; iterC from scratch: climbed to ~32 by iter 4,000) gives a rough expectation. A similar early rise signals genuine tracking progress; a flat near-zero curve signals the policy is not completing the motion.*
+*Mean reward over 20,000 training iterations. The cartwheel precedent (iterA: stuck around 3–5; iterC from scratch: climbed to ~32 by iter 4,000 — these are cartwheel-campaign numbers shown only as a rough precedent; replace with the backflip run's actual curve when populating) gives a rough expectation. A similar early rise signals genuine tracking progress; a flat near-zero curve signals the policy is not completing the motion.*
 
 ### The final backflip
 
