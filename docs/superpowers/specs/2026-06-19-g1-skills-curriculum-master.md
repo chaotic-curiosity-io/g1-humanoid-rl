@@ -42,9 +42,10 @@ and re-runnable by the reader from this checkout + the Spark.
    success criteria. The index of record.
 2. **Per-task specs** — one per candidate idea, in the proven walking-arc template,
    grouped by tier (below). Two depths:
-   - **Full specs** for the four spine tasks (and, by extension, each tier's lead):
-     Goal → Audience → staged-arc table with costs → concrete runs with exact commands
-     → the experiment → artifacts → ops/safety → success criteria → open questions.
+   - **Full specs** for the four spine tasks (the trained tier leads): Goal →
+     Audience → staged-arc table with costs → concrete runs with exact commands → the
+     experiment → artifacts → ops/safety → success criteria → open questions. (Tier 4
+     has no trained lead, so it gets only a compact spec — see below.)
    - **Compact-but-complete specs** for the deferred long tail: goal, env + reward
      terms to touch, new-code-needed flag, the train/record commands, cost estimate,
      and success criteria — enough to promote to a full run later without re-designing.
@@ -175,7 +176,11 @@ docs/reports/
 `cartwheel-journey.md` is preserved as the deep iteration log; `imitation-cartwheel.md`
 is the narrative entry point that links to it.
 
-### The four tracks
+### The tracks — a Foundations primer + four paradigm tracks
+
+Foundations is the shared keystone (the vocabulary every track builds on); the four
+*paradigm* tracks below are the four ways this repo teaches a robot to do something,
+and "four paradigms" throughout this document refers to them (not to Foundations).
 
 - **Foundations** — `00-primer` (the keystone vocabulary).
 - **Locomotion** — `01`, `02`, `03`, `running-and-flight`. The "shape a reward from
