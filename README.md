@@ -2,6 +2,8 @@
 
 Reinforcement-learning experiments teaching a Unitree G1 humanoid whole-body skills in simulation. Built on [mjlab](https://github.com/mujocolab/mjlab) (Isaac-Lab-style API on MuJoCo-Warp), running on an NVIDIA DGX Spark (aarch64, CUDA 13, sm_121 Blackwell).
 
+*A [Chaotic Curiosity](https://chaoticcuriosity.io) project. A hands-on, zero-background walkthrough of the walking policy is published at [chaotic-curiosity-io.github.io/g1-humanoid-rl](https://chaotic-curiosity-io.github.io/g1-humanoid-rl/).*
+
 Two trained skills so far:
 
 1. **Velocity tracking (walking)** — stock `Mjlab-Velocity-Flat-Unitree-G1` PPO policy, trained from scratch in ~46 min at 2048 envs. Reward 50.5, ep length 995/1000.

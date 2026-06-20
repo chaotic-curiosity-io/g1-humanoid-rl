@@ -33,7 +33,8 @@ to see how the robot's behavior shifts.
 
 ---
 
-*Built on [mjlab](https://github.com/mujocolab/mjlab) (an Isaac-Lab-style RL API
-on MuJoCo-Warp), trained on an NVIDIA DGX Spark. The full method, all the plots,
-and the training runs behind these reports live in the
+*A [Chaotic Curiosity](https://chaoticcuriosity.io) project. Built on
+[mjlab](https://github.com/mujocolab/mjlab) (an Isaac-Lab-style RL API on
+MuJoCo-Warp), trained on an NVIDIA DGX Spark. The full method, all the plots, and
+the training runs behind these reports live in the
 [repository](https://github.com/chaotic-curiosity-io/g1-humanoid-rl).*
