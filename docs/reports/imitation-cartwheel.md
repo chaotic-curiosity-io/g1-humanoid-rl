@@ -1,8 +1,6 @@
 # Imitation Learning: Teaching G1 to Cartwheel
 
-> **Draft.** This report is populated after the cartwheel campaign is fully written up in report form (see the [Imitation-track spec](../superpowers/specs/2026-06-19-spine-backflip.md) for the track plan, and [cartwheel-journey.md](../cartwheel-journey.md) for the full campaign record). The structure below is the skeleton it will fill.
-
-*This report is the Imitation track's entry point. It introduces motion imitation as a training method and summarizes the cartwheel campaign. The backflip — the Imitation track's spine task — is covered in the next report: [imitation-backflip.md](imitation-backflip.md).*
+*This report is the Imitation track's entry point. It introduces motion imitation as a training method and tells the cartwheel campaign story. The [backflip report](imitation-backflip.md) is the companion piece — the same recipe pushed to a harder motion, where it lands an honest partial result. The full iteration-by-iteration record lives in [cartwheel-journey.md](../cartwheel-journey.md).*
 
 ---
 
@@ -38,9 +36,7 @@ The cartwheel journey is documented in full — iteration by iteration, bug by b
 
 **[cartwheel-journey.md](../cartwheel-journey.md)**
 
-That document is the canonical record of what happened, including the scorer bug, the double-cartwheel reference, the render-vs-training mismatch, and the mid-run visual checks that confirmed iterC was working before training finished. If you want to understand *why* each iteration went the way it did, that is where to go.
-
-This report, once populated, will be the reader-friendly version: the polished account, with the clips embedded, written for someone who has never seen motion imitation before.
+That document is the canonical record of what happened, including the scorer bug, the double-cartwheel reference, the render-vs-training mismatch, and the mid-run visual checks that confirmed iterC was working before training finished. If you want to understand *why* each iteration went the way it did, that is where to go. This report is the reader-friendly version; the journey is the full engineering log.
 
 ---
 
@@ -77,19 +73,25 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python
 
 ## Results
 
-*This section will be populated when the cartwheel campaign is written up as a full report. The clips already exist on the Spark (see [cartwheel-journey.md](../cartwheel-journey.md) for links to the Google Drive folder). The placeholders below describe what will be embedded here.*
+### The final cartwheel (iterC)
 
-### The final cartwheel: iterC
+The final iterC policy (`model_19999.pt`), rendered from two angles. The white robot is the policy; where it overlaps the faint reference ghost, it is tracking the motion closely — the visual signature of a *successful* imitation policy (contrast the [backflip](imitation-backflip.md), where policy and reference visibly diverge).
 
-**[Placeholder: final multi-camera clip grid — `assets/cartwheel_final_grid.mp4`]**
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/cartwheel_still.png">
+  <source src="assets/cartwheel_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/cartwheel_side.mp4">download the clip</a> instead.
+</video>
 
-*Four camera angles (chase, side, front, top), 40-second continuous rollout with terminations disabled. The final policy performs at least four full cartwheels in this window, each with a genuine airborne inversion and a two-footed landing.*
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/cartwheel_still.png">
+  <source src="assets/cartwheel_chase.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/cartwheel_chase.mp4">download the clip</a> instead.
+</video>
 
-### What the failed iterations looked like
+The robot enters a genuine sideways rotation through inversion and recovers — a real cartwheel, confirmed frame by frame (never on the scorer alone, for the reason iterB makes vivid below).
 
-**[Placeholder: iterB clip for contrast — `assets/cartwheel_iterB_fail.mp4`]**
+### What the failed iteration looked like
 
-*IterB at model_25000: the policy the scorer called "95% success." Frame-by-frame review showed a crash-roll — the robot faces-plants and tumbles — not a cartwheel. This clip is the most direct illustration of why visual review is always the primary gate and numerical scores are only a first-pass filter.*
+IterB is the cautionary tale: an automated scorer called it **95% successful**, but the video showed the robot *crash-rolling* — face-planting and tumbling through 180° of pelvis roll, which a roll-angle scorer cannot tell apart from a real cartwheel. That specimen is documented as a headline exhibit in the [reward-hacking gallery](reward-hacking-gallery.md) ("when the metric lies"). It is the single clearest reason this whole project gates every result on visual review.
 
 ### The three key lessons
 
