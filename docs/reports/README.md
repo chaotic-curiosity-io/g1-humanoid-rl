@@ -38,6 +38,7 @@ Shape a velocity reward from scratch; the gait emerges from the numbers.
 | [02 — Reproducing the benchmark](02-reproducing-the-benchmark.md) | We re-ran training from scratch and got the same curve — evidence the result is real, not luck — and unpack what the robot is actually rewarded for. |
 | [03 — Turning the knobs](03-turning-the-knobs.md) | A one-change experiment (slow vs. full speed range), the lesson that *higher reward ≠ better robot*, and a menu of settings you can explore. |
 | [Running and flight phase](running-and-flight.md) | Rewarding "air time" to force a flight phase backfires into a reward-hacked dive — the highest-scoring policy is the worst gait. A live reward-hacking result. |
+| [More gaits](more-gaits.md) | Promoting two deferred Tier-1 specs to trained policies — a first-try spin-in-place and a scrappier backward walk — showing the command-override technique and that "just a command change" doesn't guarantee equal quality. |
 
 ---
 
