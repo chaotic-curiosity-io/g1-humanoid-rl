@@ -1,149 +1,120 @@
-# Imitation Learning: Teaching G1 to Backflip
+# Imitation Learning: Teaching G1 to Backflip (a partial success)
 
-> **Draft.** This report is populated after the S2 training run (see [the spec](../superpowers/specs/2026-06-19-spine-backflip.md) for the plan). The structure below is the skeleton it will fill.
-
-*This report is the Imitation track's spine task. It assumes you have read [imitation-cartwheel.md](imitation-cartwheel.md), which introduces motion imitation and documents all the lessons from the cartwheel campaign that this report applies from the start. Terms like [policy](00-primer.md), [reward](00-primer.md), and [episode](00-primer.md) are defined in [00-primer.md](00-primer.md).*
+*This report is the Imitation track's spine task. It builds on [imitation-cartwheel.md](imitation-cartwheel.md), which introduces motion imitation and the cartwheel campaign's hard-won lessons. Terms like [policy](00-primer.md), [reward](00-primer.md), and [episode](00-primer.md) are in [00-primer.md](00-primer.md). Unlike the other three spine reports, this one ends on an **honest partial result** — and that, too, is a real and useful outcome.*
 
 ---
 
 ## What you are about to see
 
-The cartwheel campaign taught us everything that can go wrong with motion imitation — and then showed us how to fix it. The backflip is the hardest test of those lessons: it requires a genuine airborne phase, full *backward* rotation (the body goes upside-down), and a stable landing. Each of those three phases is a distinct learning challenge.
+A backflip is the hardest motion in this series: it needs a genuine **airborne phase**, a full **backward rotation** through inversion, *and* a stable **landing on the feet**. In motion imitation, the policy isn't rewarded for any of those in the abstract — it's rewarded for one thing only: making the robot's body match a pre-recorded reference backflip, frame by frame. If it matches closely all the way through, a backflip emerges. If it drifts too far from the reference, the episode ends.
 
-Unlike the velocity-tracking experiments (reports [01](01-watching-it-learn.md)–[03](03-turning-the-knobs.md)), there is no reward here for speed, direction, or uprightness in the abstract. The policy is rewarded for one thing: making the robot's joints and body match a pre-recorded reference motion, frame by frame. If the robot matches the reference well enough throughout the full backflip — through takeoff, inversion, and landing — a backflip emerges. If it drifts too far from the reference, the episode resets and the attempt starts over.
-
-**The lessons from the cartwheel, applied here from the start:**
-- The termination thresholds are set to 0.5 m (not the default 0.25 m) before training begins — not discovered after the first failed iteration.
-- The reference is visually inspected before training to confirm it is a single, feasible backflip.
-- Every render uses `--termination-threshold 0.5` or `--disable-terminations` — never the default, which would cut every attempt mid-flip.
-- The numerical scorer is informational only. A visual, frame-by-frame check is the only verdict.
+We ran two full training attempts (~11 hours each). The first never left the ground. The second — after a diagnosed fix — **gets airborne and rotates**, but does not yet land the flip on its feet. This report documents both, because the *diagnosis between them* is the real lesson, and because knowing how to read "genuine progress, not yet solved" is itself a skill.
 
 ---
 
-## The command
+## The setup
 
-The full pipeline for the S2 backflip, run from the Windows host into the `mjlab-dev` container on the Spark.
+The retargeted reference was already on hand from earlier pipeline work — a clean, single backflip (`smpl_backflip_to_g1.npz`, 88 frames at 50 fps ≈ 1.8 s). That mattered: the cartwheel campaign's worst time-sink was a *bad* reference (an accidental double flip), so starting from a verified single, feasible reference removed the biggest risk up front.
 
-**Step 1: Retarget the reference motion**
+The task is the same `Mjlab-Tracking-Flat-Unitree-G1` that produced the cartwheel, with one critical knob: the **termination thresholds** — how far the robot's body (`anchor_pos`), end-effectors (`ee_body_pos`), and orientation (`anchor_ori`) may drift from the reference before the episode is cut short.
 
-```bash
-# Convert the MimicKit backflip from SMPL format to G1 joints:
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && python scripts/smpl_backflip_to_g1.py'"
+---
 
-# Convert to the CSV format the NPZ converter expects:
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && \
-  python scripts/pkl_to_csv.py \
-  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.pkl \
-  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.csv'"
+## Attempt 1 — thresholds too tight: it never leaves the ground
 
-# Convert to the NPZ format mjlab's tracking task expects:
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && \
-  python -m mjlab.scripts.csv_to_npz \
-  /workspace/pose-pipeline/outputs/gmr_pkl/smpl_backflip_to_g1.csv \
-  /workspace/pose-pipeline/motions/backflip.npz'"
-```
-
-Before training, render the reference to confirm it is a single, feasible backflip (not a double, not truncated):
-
-```bash
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/play_motion_npz.py \
-  --motion /workspace/pose-pipeline/motions/backflip.npz \
-  --output /workspace/clips/s2_reference_preview.mp4'"
-scp spark:/workspace/clips/s2_reference_preview.mp4 docs/reports/assets/
-```
-
-Watch the preview before proceeding. It should show a single backward rotation from standing through inversion to landing, roughly 2–4 seconds. If it shows two flips or stops mid-motion, fix the reference first.
-
-**Step 2: Train the tracking policy (iterA)**
+The first run used the cartwheel's proven thresholds: `anchor_pos` and `ee_body_pos` at 0.5 m, `anchor_ori` at 0.8 rad.
 
 ```bash
 ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjlab.scripts.train \
   Mjlab-Tracking-Flat-Unitree-G1 \
-  --env.commands.motion.motion-file /workspace/pose-pipeline/motions/backflip.npz \
-  --env.terminations.anchor-pos.threshold 0.5 \
-  --env.terminations.ee-body-pos.threshold 0.5 \
-  --agent.num-envs 4096 \
-  --agent.max-iterations 20000 \
-  --agent.seed 42'"
+  --env.scene.num-envs 4096 --agent.max-iterations 20000 \
+  --env.commands.motion.motion-file /workspace/pose-pipeline/motions/smpl_backflip_to_g1.npz \
+  --env.terminations.anchor-pos.params.threshold 0.5 \
+  --env.terminations.ee-body-pos.params.threshold 0.5'"
 ```
 
-This is the spine's heaviest run: approximately 8–12 hours on the GPU. The host-quiesce bracket (stopping co-tenant containers) must be run before starting. See the [spec](../superpowers/specs/2026-06-19-spine-backflip.md) for the full ops procedure.
+Rendered mid-training and again near the end (`--disable-terminations`, so nothing is cut), the result was the same: the robot **winds up and crouches — but never leaves the ground.** The green ghost is the reference flipping overhead; the white robot collapses beneath it.
 
-**Step 3: Render the result**
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s2_v2_still.png">
+  <source src="assets/s2_v1_grounded_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s2_v1_grounded_side.mp4">download the clip</a> instead.
+</video>
 
-```bash
-# Render with terminations matching training (recommended first pass):
-ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace && MUJOCO_GL=egl python scripts/record_policy.py \
-  --task Mjlab-Tracking-Flat-Unitree-G1 \
-  --checkpoint logs/rsl_rl/g1_tracking/<timestamp>/model_19999.pt \
-  --termination-threshold 0.5 \
-  --no-shadows --no-reflections --no-debug-viz \
-  --cameras chase side front top grid \
-  --output /workspace/clips/s2_final_{camera}.mp4'"
-scp spark:/workspace/clips/s2_*.mp4 docs/reports/assets/
-```
+**Why?** A backflip travels much further from the start pose than a cartwheel — straight up, then fully inverted. The instant the robot couldn't follow the reference up into the air, its body/limb error crossed the 0.5 m threshold and the **episode terminated**. The policy was punished for *trying* to leave the ground (every attempt ended immediately) and so never accumulated any reward for the airborne phase. It learned the safest thing available: wind up, stay down, track the start and end of the motion where the reference is near the floor.
 
-Replace `<timestamp>` with the run directory printed by the trainer at startup. Both threshold flags must match the training values — using the default 0.25 m would cut every attempt mid-flip on screen.
+This is the cartwheel lesson in its sharpest form: **a termination threshold that's too tight starves the policy of any experience of the hard phase, so it can never learn it.**
 
 ---
 
-## Results
+## Attempt 2 — loosen the thresholds: it gets airborne
 
-*This section is populated after the S2 training run and visual verification. Placeholders below describe what will appear here.*
+The fix follows directly from the diagnosis: give episodes room to survive the high-error aerial phase. Position thresholds 0.5 → **1.0 m**, orientation 0.8 → **1.5 rad** (a flip is 360° of rotation in under a second, so even a small timing offset spikes the orientation error — that threshold had to open up too).
 
-### Reference motion preview
+```bash
+  --env.terminations.anchor-pos.params.threshold 1.0 \
+  --env.terminations.ee-body-pos.params.threshold 1.0 \
+  --env.terminations.anchor-ori.params.threshold 1.5
+```
 
-**[Placeholder: reference preview clip — `assets/s2_reference_preview.mp4`]**
+The change worked — mechanically, exactly as intended. The robot now **launches off the ground and rotates backward through the air**:
 
-*The retargeted backflip reference, rendered before training began. Confirms: single backflip, feasible duration (~2–4 seconds), genuine backward rotation with inversion.*
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s2_v2_still.png">
+  <source src="assets/s2_v2_attempt_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s2_v2_attempt_side.mp4">download the clip</a> instead.
+</video>
 
-### The training curve
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s2_v2_still.png">
+  <source src="assets/s2_v2_attempt_chase.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s2_v2_attempt_chase.mp4">download the clip</a> instead.
+</video>
 
-**[Placeholder: reward curve plot — `assets/s2_reward_curve.png`]**
+It gets up, tips backward into a partial inversion — and then comes down onto its back rather than completing the rotation to land on its feet. **A genuine airborne backflip *attempt*, not a landed backflip.**
 
-*Mean reward over 20,000 training iterations. The cartwheel precedent (iterA: stuck around 3–5; iterC from scratch: climbed to ~32 by iter 4,000 — these are cartwheel-campaign numbers shown only as a rough precedent; replace with the backflip run's actual curve when populating) gives a rough expectation. A similar early rise signals genuine tracking progress; a flat near-zero curve signals the policy is not completing the motion.*
+### The metrics tell the same story
 
-### The final backflip
+The two training metrics, v1 (tight) vs v2 (loose), make the diagnosis visible. First, the body-tracking error:
 
-**[Placeholder: multi-camera clip grid — `assets/s2_final_grid.mp4`]**
+![anchor position error, v1 vs v2](assets/s2_anchor_err.png)
 
-*Four camera angles (chase, side, front, top), rendered with `--termination-threshold 0.5` or `--disable-terminations`. The visual-verification gate: at least one episode in this clip must show all three phases — takeoff, inversion (head below hips), and landing — confirmed by stepping through the clip frame by frame.*
+Counterintuitively, v2's error is *higher* (~0.63 vs v1's ~0.44) — and that's the good news. v1 was pinned right against its 0.5 m ceiling: it never went anywhere near the parts of the motion that produce large error. v2's error sits comfortably under its 1.0 m ceiling *because the robot is actually out in the air*, where matching the reference is genuinely hard. Higher error here means **more of the flip is being attempted**, not less skill.
 
-### Iteration log
+The end-effector terminations confirm it:
 
-**[Placeholder: prose iteration log — written after the run completes.]**
+![ee_body terminations, v1 vs v2](assets/s2_ee_term.png)
 
-The backflip is expected to require multiple iterations, following the cartwheel precedent. Each iteration will be documented here:
+v2 (orange) terminates consistently less than v1 (blue) — ~105 vs ~175 per rollout window, and still falling at the end — because its episodes survive deeper into the flip instead of being cut at takeoff.
 
-- **IterA:** what did the initial training produce? Did the policy show genuine airborne phases, crash-rolls, or no rotation at all?
-- **IterB (if needed):** what changed, and why? What did the visual review of iterA show?
-- **IterC (if needed):** same.
+---
 
-For each iteration: the key change, what the video showed, and whether it passed the visual verification gate.
+## The honest verdict
 
-### Visual verification statement
+Across every render of the final v2 policy (frame-by-frame, multiple angles — the visual gate, never the score), the result is consistent: **the robot performs a genuine backward airborne rotation but does not land it on its feet.** It is a partial backflip.
 
-**[Placeholder: the verdict — written after frame-by-frame review of the final clip.]**
+That is a real, hard-won step:
 
-This section will state clearly:
-- How many episodes in the render show a completed backflip (all three phases visible).
-- What the numerical scorer reported — and whether it matched the visual review.
-- Whether any crash-rolls were present (which can fool a roll-angle-only scorer).
+| Attempt | Thresholds | Behaviour |
+|---|---|---|
+| v1 | 0.5 / 0.8 / 0.5 (tight) | winds up, **never leaves the ground** |
+| v2 | 1.0 / 1.5 / 1.0 (loose) | **launches and rotates in the air**, lands on its back |
 
-A confirmed backflip requires all three phases visible in the clip. A numerical score is not sufficient.
+And it's an honest place to stop and report, for a reason worth internalising: **not every skill is solved within the training budget you give it, and recognising "genuine progress, short of the goal" is part of the craft.** The backflip is simply harder than the cartwheel (the cartwheel itself needed three reference/threshold iterations) — full inversion plus a feet-first landing is a tall order, and two ~11-hour runs got it airborne but not landed.
+
+### What a v3 would change
+
+The diagnosis points cleanly at the next lever. The tracking reward pays for *matching the reference pose* — but nothing **specifically rewards ending on the feet**, so a partway rotation that crashes onto the back scores nearly as well as a clean landing. A v3 would add an explicit **landing term** (reward feet-down + upright in the final phase of the motion), exactly the way the [get-up task](getting-up.md) needed an explicit "hold the stand" reward to stop settling for a crouch. It may also need more iterations, or a reference whose landing is emphasised. Each attempt is another ~11-hour run — so this is a deliberate next-session decision, not an automatic one.
 
 ---
 
 ## Tweak this to explore
 
-**Threshold tuning.** The 0.5 m termination threshold that worked for the cartwheel may need adjustment for the backflip. The backflip involves more vertical rotation and a different end-effector trajectory. Try rendering with `--disable-terminations` alongside `--termination-threshold 0.5` to see the difference — if the two clips look very different, the threshold is affecting the render in ways worth understanding.
+**Add a landing reward.** The clearest next experiment: a reward term active in the last ~0.3 s of the motion that pays for feet-on-ground + torso-upright. This is the missing incentive — the same shaping insight that took [get-up](getting-up.md) from a stable crouch to a full stand.
 
-**The reference matters most.** More than any reward weight or threshold, the quality and feasibility of the reference motion determines whether the policy can learn the backflip. If iterA produces a flop rather than a rotation, inspect `play_motion_npz.py` output again before adjusting training parameters. A bad reference is the hardest failure to diagnose because the training metrics may not reflect it.
+**Sweep the thresholds further.** v1→v2 was 0.5→1.0. Does 1.5 help the rotation complete, or does it just let the policy drift sloppily? There's a sweet spot between "cut off too early" and "no discipline at all."
 
-**Try `--disable-terminations` for the render even if training used thresholds.** This shows the policy's full behavior without resets — including what happens *after* the backflip (does the robot recover to standing? walk a step? attempt another flip?). Comparing the threshold render to the no-termination render tells you whether the policy has genuinely learned the landing or just learned to stay close to the reference long enough to avoid episode-ending drift.
+**Inspect the reference's landing.** Play `smpl_backflip_to_g1.npz` frame by frame (`play_motion_npz.py`) and check the *landing* portion specifically — if the reference's own landing is brief or awkward, the policy has little to imitate there.
 
-**Compare backflip to cartwheel.** Both use the same task and pipeline. Once both policies exist, render them side by side at the same camera angle. The structural difference — sideways rotation vs. backward rotation, different end-effector trajectories — will be visible in the timing and shape of the airborne phase.
+**Compare to the cartwheel.** The [cartwheel](imitation-cartwheel.md) *did* complete (sideways rotation, lower height) on the same task and pipeline. Rendering both side by side shows exactly why backward-and-up is the harder of the two.
 
 ---
 
-*All experiments use the Unitree G1 on flat terrain, trained with the MuJoCo-Warp simulator on a DGX Spark (NVIDIA GB10, aarch64). The spec for this run: [2026-06-19-spine-backflip.md](../superpowers/specs/2026-06-19-spine-backflip.md).*
+*Unitree G1 on flat terrain, MuJoCo-Warp on a DGX Spark (NVIDIA GB10, aarch64). Motion-tracking task, single backflip reference, 4096 parallel robots, 20000 iterations per attempt; the variable between attempts is the termination-threshold set. The spec for this run: [2026-06-19-spine-backflip.md](../superpowers/specs/2026-06-19-spine-backflip.md).*
