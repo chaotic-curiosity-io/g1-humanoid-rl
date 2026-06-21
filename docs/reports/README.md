@@ -37,7 +37,7 @@ Shape a velocity reward from scratch; the gait emerges from the numbers.
 | [01 — Watching it learn](01-watching-it-learn.md) | The robot goes from random flailing to walking, shown frame by frame; how to read a reward curve. |
 | [02 — Reproducing the benchmark](02-reproducing-the-benchmark.md) | We re-ran training from scratch and got the same curve — evidence the result is real, not luck — and unpack what the robot is actually rewarded for. |
 | [03 — Turning the knobs](03-turning-the-knobs.md) | A one-change experiment (slow vs. full speed range), the lesson that *higher reward ≠ better robot*, and a menu of settings you can explore. |
-| [Running and flight phase](running-and-flight.md) *(draft — populated after the S1 run)* | Push the velocity range until the robot develops a true flight phase; measure the gait change. |
+| [Running and flight phase](running-and-flight.md) | Rewarding "air time" to force a flight phase backfires into a reward-hacked dive — the highest-scoring policy is the worst gait. A live reward-hacking result. |
 
 ---
 
@@ -48,8 +48,8 @@ move from frame-level feedback.
 
 | Report | Hook |
 |---|---|
-| [Imitation — cartwheel](imitation-cartwheel.md) *(draft — populated after the cartwheel narrative is finalized)* | A narrative entry point to the cartwheel training; links the full iteration log in [`../cartwheel-journey.md`](../cartwheel-journey.md). |
-| [Imitation — backflip](imitation-backflip.md) *(draft — populated after the S2 run)* | Retarget a single feasible backflip reference onto the G1 and train a policy to complete it — applying every lesson from the cartwheel. |
+| [Imitation — cartwheel](imitation-cartwheel.md) | The successful acrobatic: a real, frame-confirmed cartwheel, plus the three hard-won lessons (and the scorer that lied). Links the full log in [`../cartwheel-journey.md`](../cartwheel-journey.md). |
+| [Imitation — backflip](imitation-backflip.md) | An honest partial: loosening the termination thresholds moves the robot from never-leaving-the-ground to a real airborne rotation — short of a landed flip. How to read genuine-but-incomplete progress. |
 
 ---
 
@@ -60,7 +60,7 @@ determined by the reward terms you write.
 
 | Report | Hook |
 |---|---|
-| [Getting up](getting-up.md) *(draft — populated after the S3 run)* | Train a policy to stand up from randomized fallen poses using only a shaped reward — the report most likely to surface a new reward hack. |
+| [Getting up](getting-up.md) | A brand-new task built from scratch: the robot learns to stand up from fallen poses — but only after **four** reward iterations, each fixing a distinct reward hack (stillness, success-termination, stable crouch). Ends in a full stand. |
 
 ---
 
@@ -70,7 +70,7 @@ Understand and deliberately control what a reward actually incentivizes.
 
 | Report | Hook |
 |---|---|
-| [Reward-hacking gallery](reward-hacking-gallery.md) *(draft — populated after the S4 run)* | A curated set of deliberately-naive rewards, each showing the cheat the robot found and the fix; the capstone lesson that "reward design *is* the job." |
+| [Reward-hacking gallery](reward-hacking-gallery.md) | A taxonomy of three real failure modes from this project's own runs — proxy gaming (the dive), silent compensation (no-upright), and a lying metric (the cartwheel scorer); the capstone that "reward design *is* the job." |
 | [Methods and techniques reference](methods-reference.md) | One lookup surface for the full toolkit: reward terms, terminations, the retargeting pipeline, curricula, recording gotchas, helper scripts, and ops/safety. |
 
 ---
