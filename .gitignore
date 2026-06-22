@@ -41,6 +41,9 @@ Screenshot*.png
 # Local Claude Code project guide (kept local; contains host/infra details, not for the public repo)
 /CLAUDE.md
 
+# Superpowers SDD scratch (build ledger, briefs, task reports — internal, not published)
+.superpowers/
+
 # Editor
 .vscode/
 .idea/
