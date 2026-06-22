@@ -49,7 +49,7 @@ comes up front, before the worked examples that rely on it.
 
 ### The chapter map — 15 chapters across 7 parts
 
-**Part I — What is this even? (zero assumptions)**
+**Part I — What is this even? (zero assumptions)** *(absorbs 00-primer)*
 1. `01-the-big-picture` — a robot that *learns* to move vs. one that's programmed;
    the simulator; why thousands of robots train in parallel.
 2. `02-the-vocabulary` — observation, action, policy, reward, episode,
