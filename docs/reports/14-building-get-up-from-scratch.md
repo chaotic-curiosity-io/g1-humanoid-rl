@@ -1,4 +1,4 @@
-# Chapter 14 — Building Get-Up from Scratch
+﻿# Chapter 14 — Building Get-Up from Scratch
 
 *Part V: A New Paradigm*
 
@@ -277,8 +277,3 @@ Next: [Chapter 15 — Reward Engineering as Craft](15-reward-engineering-as-craf
 ---
 
 *Unitree G1 on flat terrain, MuJoCo-Warp on a DGX Spark. Task: `Mjlab-Recovery-Flat-Unitree-G1` — a new task written for this spine policy. Four reward iterations, 2048 parallel environments, up to 2500 iterations per attempt. The task source (reset, reward, config) is in [`../../recovery-task/`](../../recovery-task/).*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

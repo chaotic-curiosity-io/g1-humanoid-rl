@@ -1,4 +1,4 @@
-# Chapter 12 — Imitation and the Cartwheel
+﻿# Chapter 12 — Imitation and the Cartwheel
 
 *Part V: A New Paradigm*
 
@@ -211,8 +211,3 @@ Next: [Chapter 13 — The Backflip in Three Attempts](13-the-backflip-in-three-a
 ---
 
 *Unitree G1, flat terrain, MuJoCo-Warp simulator on a DGX Spark. Tracking task: `Mjlab-Tracking-Flat-Unitree-G1`. Reference motion: MimicKit cartwheel retargeted to G1, 2.73 s. IterC: 4096 parallel environments, 20 000 iterations, 0.5 m termination thresholds. Final checkpoint: `model_19999.pt`. Full iteration log: [cartwheel-journey.md](../cartwheel-journey.md).*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

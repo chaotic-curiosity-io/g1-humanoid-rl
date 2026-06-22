@@ -1,4 +1,4 @@
-# Chapter 06 — Watching It Walk
+﻿# Chapter 06 — Watching It Walk
 
 *Chapter 05 gave you the tools to read a reward curve — the flat floor, the "aha" climb, the steady refinement. You saw the numbers. Now watch the body. This chapter replays the same training run frame by frame: you will see the robot go from collapsing in under a second to something that, by any reasonable standard, walks. Along the way you will learn what the task actually asked the robot to do, why the gait looks the way it does, and why nobody programmed a single step.*
 
@@ -204,8 +204,3 @@ Note: the task ID (`Mjlab-Velocity-Flat-Unitree-G1`) must be supplied explicitly
 In Chapter 07 you will stress-test this result: run the same training from a different seed, inspect each reward term individually, and build real evidence that what you saw in the clips is consistent and real — not a lucky one-off. The lesson from Chapter 05 that the metric is a proxy, not the behavior, will come back with teeth.
 
 Continue to [Chapter 07 — Proving It's Real](07-proving-its-real.md).
-
----
-
-*Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>*
-*Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN*

@@ -1,4 +1,4 @@
-# Chapter 09 — The Running Dive
+﻿# Chapter 09 — The Running Dive
 
 *Part IV: Reward Engineering*
 
@@ -179,8 +179,3 @@ Next: [Chapter 10 — More Gaits and the Command System](10-more-gaits-and-comma
 ---
 
 *All experiments: Unitree G1 on flat terrain, MuJoCo-Warp simulator, DGX Spark (NVIDIA GB10, aarch64). Three policies, 2000 iterations each, 2048 parallel robots. The only variable across training runs is the `air_time` reward weight: `0.0` / `0.4` / `1.0`.*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

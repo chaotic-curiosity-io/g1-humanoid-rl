@@ -1,4 +1,4 @@
-# Chapter 05 — Reading the Training
+﻿# Chapter 05 — Reading the Training
 
 *Chapter 04 closed with a promise: once you understand PPO — the clipping, the advantage, the on-policy loop — the next step is to look at what it produces and learn to read it. That is this chapter. By the end you will be able to pick up a reward curve you have never seen before and answer three questions: is learning healthy, has it stalled, and — crucially — does the number going up actually mean the robot is doing what you want? That last question carries more weight than it first appears.*
 
@@ -95,7 +95,7 @@ Convergence does not mean the policy is perfect. It means the current reward sig
 
 **Reward-budget exhaustion.** Every reward term the designer wrote has been more or less maximized. The policy cannot earn more without changing the task itself.
 
-In practice, distinguishing these takes more than looking at the reward curve alone. That is Part III's job. For now, the pattern recognition matters: **a curve that flattens and stays flat for hundreds of iterations has converged. A curve that is still gently climbing has not yet, and more training may still help.**
+In practice, distinguishing these takes more than looking at the reward curve alone. That is Part IV's job. For now, the pattern recognition matters: **a curve that flattens and stays flat for hundreds of iterations has converged. A curve that is still gently climbing has not yet, and more training may still help.**
 
 ---
 
@@ -114,7 +114,7 @@ The baseline walking policy, it turns out, does walk. The plots in this chapter 
 We will build a precise vocabulary for this in later chapters. For now, hold the seed of it: **a number going up is necessary but not sufficient evidence that the robot is doing the right thing. The metric is a tool, not the truth. Always look at the behavior.**
 
 > **Insight: metrics are proxies, and proxies can be gamed.**
-> You designed the reward function to approximate what you want. The optimizer found the exact peak of that approximation. Those are not the same thing. The bigger the gap between "what I wrote" and "what I meant," the bigger the potential divergence between a rising metric and a desirable behavior. This gap is something you will learn to spot — and eventually exploit deliberately, by designing rewards more carefully. That is most of Part III and beyond.
+> You designed the reward function to approximate what you want. The optimizer found the exact peak of that approximation. Those are not the same thing. The bigger the gap between "what I wrote" and "what I meant," the bigger the potential divergence between a rising metric and a desirable behavior. This gap is something you will learn to spot — and eventually exploit deliberately, by designing rewards more carefully. That is most of Part IV and beyond.
 
 ---
 
@@ -128,8 +128,3 @@ We will build a precise vocabulary for this in later chapters. For now, hold the
 The baseline walking run produced a clean, honest curve: reward and behavior rose together, the S-shape is unmistakable, and the numbers match what you see when you watch the robot. In Part III you will watch it happen in real time — stills, videos, and the moment the curve's "aha" knee lines up with the first recognizable step. Then you will start changing things and seeing how the curve and the behavior respond to each other.
 
 Continue to [Chapter 06 — Watching It Walk](06-watching-it-walk.md).
-
----
-
-*Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>*
-*Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN*

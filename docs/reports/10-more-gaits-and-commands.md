@@ -1,4 +1,4 @@
-# Chapter 10 — More Gaits and the Command System
+﻿# Chapter 10 — More Gaits and the Command System
 
 *Part IV: Reward Engineering*
 
@@ -169,8 +169,3 @@ Next: [Chapter 11 — The Reward-Hacking Gallery](11-the-reward-hacking-gallery.
 ---
 
 *All experiments: Unitree G1 on flat terrain, MuJoCo-Warp simulator, DGX Spark (NVIDIA GB10, aarch64). 2048 parallel robots, 1500 iterations per gait (~25 minutes each), pure command/curriculum overrides — no new reward terms, no code changes. Forward-walk baseline from Session 1 (2048 robots, 2050 iterations).*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

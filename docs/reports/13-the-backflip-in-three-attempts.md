@@ -1,4 +1,4 @@
-# Chapter 13 — The Backflip in Three Attempts
+﻿# Chapter 13 — The Backflip in Three Attempts
 
 *Part V: A New Paradigm*
 
@@ -229,8 +229,3 @@ Next: [Chapter 14 — Building Get-Up from Scratch](14-building-get-up-from-scra
 ---
 
 *Unitree G1, flat terrain, MuJoCo-Warp on a DGX Spark. Task: `Mjlab-Tracking-Flat-Unitree-G1`. Reference: `smpl_backflip_to_g1.npz`, 88 frames at 50 fps (≈ 1.8 s). 4096 parallel environments, 20 000 iterations per attempt (~11 hours each). v1→v2: termination thresholds 0.5 m / 0.8 rad → 1.0 m / 1.5 rad. v3: + `landing_feet_upright` reward, weight 5.0, gated to last 40% of clip. Full landing reward code and config edits: [`../../backflip-v3/`](../../backflip-v3/).*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

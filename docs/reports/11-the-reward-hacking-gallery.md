@@ -1,4 +1,4 @@
-# Chapter 11 — The Reward-Hacking Gallery
+﻿# Chapter 11 — The Reward-Hacking Gallery
 
 *Part IV: Reward Engineering*
 
@@ -134,8 +134,3 @@ Next: [Chapter 12 — Imitation and the Cartwheel](12-imitation-and-the-cartwhee
 ---
 
 *Exhibit 1 and 2: Unitree G1, velocity task, flat terrain, MuJoCo-Warp simulator. Exhibit 1 (the dive) from Chapter 09 — three policies, 2000 iterations each, 2048 parallel robots, only `air_time` weight varied. Exhibit 2 (no-upright) — same task, `upright` weight set to `0.0`. Exhibit 3 (the cartwheel scorer) — from the tracking task; full details in [Chapter 12](12-imitation-and-the-cartwheel.md) and [cartwheel-journey.md](../cartwheel-journey.md).*
-
----
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN

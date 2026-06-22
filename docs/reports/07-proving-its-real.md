@@ -1,4 +1,4 @@
-# Chapter 07 — Proving It's Real
+﻿# Chapter 07 — Proving It's Real
 
 *Chapter 06 ended with a confident walking robot — torso upright, weight shifting smoothly, arms swinging in rough counterbalance to its legs. The numbers looked good: mean reward 50.5, mean episode length 995. But you only have one run. How do you know it wasn't luck? And how do you know the numbers are measuring what you think they are? This chapter answers both questions.*
 
@@ -22,7 +22,7 @@ One specific source of randomness is the **seed** — a starting number that ini
 
 Think of the seed like the shuffle you apply to a deck of cards before a card game. A fixed seed always shuffles the deck the same way. A different seed gives a different shuffle, but the same game rules still apply. Two runs with different seeds are genuinely independent — they experienced different random starting conditions — but if both produce the same outcome, the outcome is not a product of luck.
 
-For the reproduction run, we used **seed 42** — the framework's default, which was also the baseline run's seed. This is important: it means the two curves are not completely independent draws (they started from the same random conditions), but they were run at different times, on different hardware states, with separate CUDA execution streams. The agreement between them confirms the recipe is stable. Using a *different* seed would test robustness to initialization; we will do that kind of experiment in Chapter 08. Here, the goal is the simpler check: does the same recipe reproduce?
+For the reproduction run, we used **seed 42** — the framework's default, which was also the baseline run's seed. This is important: it means the two curves are not completely independent draws (they started from the same random conditions), but they were run at different times, on different hardware states, with separate CUDA execution streams. The agreement between them confirms the recipe is stable. Using a *different* seed would test robustness to initialization; that is a different question from the one we are answering here. Here, the goal is the simpler check: does the same recipe reproduce?
 
 ---
 
@@ -193,8 +193,3 @@ There will be runs later in this series where one check passes and the other fai
 In Chapter 08, you will start pulling the knobs — changing reward weights and watching how the gait and curves shift. Now that you can read both the total reward and the term breakdown, you will be able to tell not just whether a change made the number go up, but *what specifically the robot changed about its behavior* to earn the higher score. And you will encounter the first case where a higher number does not mean a better robot.
 
 Continue to [Chapter 08 — Turning the Knobs](08-turning-the-knobs.md).
-
----
-
-*Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>*
-*Claude-Session: https://claude.ai/code/session_01D6dhn7JiNfx8tpFbitRmgN*
