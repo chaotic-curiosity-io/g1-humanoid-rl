@@ -128,10 +128,10 @@ You now have the full method. Here is where to take it.
 
 **The next experiments.** This curriculum trained a handful of skills, but the repo ships **ready-to-run specs** for many more — complete enough to launch without re-designing the task. They are grouped by tier:
 
-- **[Tier 1 — gait tweaks](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier1-gait-tweaks-compact.md):** a crouched "Groucho" walk, tiptoe, energy-efficient gait, prescribed hop/march — all on the existing velocity env, no new code.
-- **[Tier 2 — acrobatics](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier2-acrobatics-compact.md):** spinkick, jump, dance — all through the imitation pipeline you now understand.
-- **[Tier 3 — from-scratch tasks](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier3-tasks-compact.md):** push-recovery and single-leg balance — each a new task in the mold of get-up.
-- **[Tier 4 — object / whole-body](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier4-objects-compact.md):** reach-to-target, kick-a-ball, carry — the highest research risk, spec-only for now.
+- **[Tier 1 — gait tweaks](https://github.com/chaoticcuriosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier1-gait-tweaks-compact.md):** a crouched "Groucho" walk, tiptoe, energy-efficient gait, prescribed hop/march — all on the existing velocity env, no new code.
+- **[Tier 2 — acrobatics](https://github.com/chaoticcuriosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier2-acrobatics-compact.md):** spinkick, jump, dance — all through the imitation pipeline you now understand.
+- **[Tier 3 — from-scratch tasks](https://github.com/chaoticcuriosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier3-tasks-compact.md):** push-recovery and single-leg balance — each a new task in the mold of get-up.
+- **[Tier 4 — object / whole-body](https://github.com/chaoticcuriosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-tier4-objects-compact.md):** reach-to-target, kick-a-ball, carry — the highest research risk, spec-only for now.
 
 Pick one. You have everything you need to run it: you know what a reward term is, how a gait emerges, how a proxy gets gamed, how imitation tracks a reference, and how a from-scratch task lives or dies on its starting states and its definition of success. The rest is the craft — and the craft is practiced one change at a time, with your eyes on the robot.
 

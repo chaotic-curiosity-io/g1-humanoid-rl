@@ -2,7 +2,7 @@
 
 Reinforcement-learning experiments teaching a Unitree G1 humanoid whole-body skills in simulation. Built on [mjlab](https://github.com/mujocolab/mjlab) (Isaac-Lab-style API on MuJoCo-Warp), running on an NVIDIA DGX Spark (aarch64, CUDA 13, sm_121 Blackwell).
 
-*A [Chaotic Curiosity](https://chaoticcuriosity.io) project. A hands-on, zero-background walkthrough of the walking policy is published at [chaotic-curiosity-io.github.io/g1-humanoid-rl](https://chaotic-curiosity-io.github.io/g1-humanoid-rl/).*
+*A [Chaotic Curiosity](https://chaoticcuriosity.io) project. A hands-on, zero-background 15-chapter RL curriculum (walking → running → cartwheel → backflip → get-up) is published at [chaoticcuriosity-io.github.io/g1-humanoid-rl](https://chaoticcuriosity-io.github.io/g1-humanoid-rl/).*
 
 Two trained skills so far:
 
@@ -34,7 +34,7 @@ docs/
   cartwheel-journey.md       — iteration-by-iteration log of the cartwheel training, written for a non-technical reader
   session-01-writeup.md      — end-to-end walkthrough of setting up mjlab on the DGX Spark and training the baseline walking policy
   dgx-spark-manual.md        — local copy of the DGX Spark setup manual (April 2026)
-  reports/                   — 4-part beginner-friendly learning series on walking RL (start at docs/reports/README.md)
+  reports/                   — 15-chapter beginner-friendly RL curriculum, zero background to deep (start at docs/reports/README.md)
 scripts/
   record_policy.py           — headless multi-camera renderer for a trained tracking/velocity policy; supports --disable-terminations and telemetry dump
   play_motion_npz.py         — headless replay of a tracking motion.npz (reference motion, no policy)
