@@ -136,6 +136,6 @@ The lesson is always the same: the reward is a signal designed to guide training
 
 ---
 
-*Part III ends here. The baseline walking skill is understood, reproduced, stress-tested, and now experimented on. Part IV begins with a new question: what happens when you push the reward function itself — not the training range, but the terms and weights that define what the robot is trying to do? Chapter 09 introduces a first attempt at something harder: getting the G1 to run, with a flight phase, at speed. The reward goes up. The behavior is not what anyone expected.*
+*Part III ends here. The baseline walking skill is understood, reproduced, stress-tested, and now experimented on. Part IV begins with a new question: what happens when you push the reward function itself — not the training range, but the terms and weights that define what the robot is trying to do? Chapter 09 introduces a first attempt at something harder: getting the G1 to run faster, with both feet briefly off the ground. The reward goes up. The behavior is not what anyone expected.*
 
 *Next: [Chapter 09 — The Running Dive](09-the-running-dive.md)*

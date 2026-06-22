@@ -79,7 +79,7 @@ reward = exp(-(error²) / std²)
 
 Put together: the robot earns near-perfect reward when it is close to the reference, earns decreasing reward as it drifts, and earns near-zero reward when it is far off — all on a smooth continuous curve that the optimizer can follow all the way from "completely lost" to "nearly perfect."
 
-> **Insight: why exp(−error/std) is the right shape for an imitation reward**
+> **Insight: why exp(−error²/std²) is the right shape for an imitation reward**
 >
 > When you write reward terms for locomotion — track speed, stay upright, penalize jerk — you are combining several signals, each measuring something different. The policy can satisfy all of them imperfectly and still score well.
 >
@@ -206,7 +206,7 @@ That document is the canonical record. This chapter is the reader-friendly synth
 - The **iterB scorer-lied** story is the payoff of Chapter 11's metric-lying exhibit: a roll-angle scorer reported 95% success on a policy that was crash-rolling, not cartwheeling. The proxy metric had a gap the failure slipped through perfectly. Visual review caught it.
 - **IterC** fixed all three problems — single clean reference, correct thresholds, fresh training — and produced a verified cartwheel within 4 500 iterations, confirmed frame by frame in a 40-second continuous rollout.
 
-Next: [Chapter 13 — The Backflip in Three Attempts](13-the-backflip-in-three-attempts.md). The cartwheel succeeded because loosening the termination threshold let the policy experience the full motion. The backflip has the same structure — but harder: a faster rotation, a longer aerial phase, and a landing that the policy needs to *stick*, not just survive. Chapter 13 introduces two new tools for when a motion is this difficult to learn: a gated reward that only activates in the final phase of the motion, and a principled way of diagnosing whether your threshold is the problem using per-term metric plots.
+Next: [Chapter 13 — The Backflip in Three Attempts](13-the-backflip-in-three-attempts.md). The cartwheel succeeded because loosening the termination threshold let the policy experience the full motion. The backflip has the same structure — but harder: a faster rotation, a longer aerial phase, and a landing that the policy needs to *stick*, not just survive. Chapter 13 shows what it takes when the imitation reward is necessary but not sufficient — and how to read per-term metric plots to tell whether the threshold is the problem before guessing blindly.
 
 ---
 

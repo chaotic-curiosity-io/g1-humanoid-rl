@@ -77,7 +77,7 @@ Read that as: "the policy π with weights θ, given observation oₜ at time t, 
 
 In the G1 experiment, the policy is a fully connected neural network with three hidden layers of 512, 256, and 128 units (narrowing as it goes deeper) — roughly 200,000 adjustable weights in total. Before training, all weights are random, so the policy outputs random joint angles and the robot falls immediately. Training's job is to find values of θ that make the policy output good actions.
 
-The policy has no memory of past timesteps (it is called *memoryless* or *Markovian*: the output depends only on the current observation, not the history). Walking turns out to be learnable under this constraint — the current body velocity and joint state carry enough information about what came just before.
+The policy has no memory of past timesteps (it is called *memoryless* or *Markovian*: the output depends only on the current observation, not the history). Walking turns out to be learnable under this constraint — the current body velocity and joint state carry enough information about what came just before. (One nuance worth knowing is coming: in practice the policy adds a small amount of randomness to its outputs so it can explore different actions and discover better ones — Chapter 03 explains why.)
 
 > **Insight: the policy is what training is improving.**
 > Every data point collected during practice, every reward signal, every learning update — all of it exists to improve θ. The observation space, action space, and environment are fixed. Only θ changes. When someone says "the robot is learning," what they mean precisely is "θ is being adjusted."
