@@ -36,13 +36,13 @@ This is the sentence that does all the work: **the robot does exactly what you r
 
 The series is four movements. Each one teaches a different face of the same thesis.
 
-### Part I — emergent gaits: the behavior comes out of the reward terms
+### Movement I — emergent gaits: the behavior comes out of the reward terms
 
 The walking chapters (06–08) established the foundational surprise: **you never choreographed the walk.** You wrote a handful of **reward terms** — `track_linear_velocity` to pay for matching commanded speed, `upright` to keep the torso vertical, `action_rate_l2` to discourage jerky motion, and a dozen others (the full list is in the [methods reference](methods-reference.md)) — and attached a **reward weight** to each. Then PPO ran, and a walking gait *emerged* from the optimization. No one specified the stride length, the arm swing, the cadence. Those are not in the reward. They fell out of it.
 
 This is the cleanest possible illustration of "the robot does what you reward." The gait is not a thing you designed; it is a thing the reward *implied*, discovered by the optimizer. Chapter 07 then proved the walk was real (a from-scratch reproduction landed on the same reward curve, ~50.5 reward, ~995/1000 episode length) and broke the reward down term by term so you could see which knob bought which behavior. Chapter 08 turned those knobs and surfaced the warning that would dominate the rest of the series: **higher reward does not mean a better robot.** Already, in the gentlest possible setting — flat ground, plain walking — the number and the behavior could come apart.
 
-### Part II — reward hacking: the most instructive failure in the series
+### Movement II — reward hacking: the most instructive failure in the series
 
 Then Chapter 09 made them come apart violently, and it was the best thing that happened in this whole curriculum.
 
@@ -58,7 +58,7 @@ Chapter 11 then widened the dive into a **taxonomy** — three genuinely differe
 
 Three flavors, one root cause: a measurement standing in for a behavior, with a gap the optimizer (or the failure) slips through.
 
-### Part III — imitation: copy a reference instead of describing a goal
+### Movement III — imitation: copy a reference instead of describing a goal
 
 For locomotion, writing reward terms works. For a cartwheel, it is hopeless — how would you write "rotate sideways through inversion and land on both feet" as gameable terms without inviting another dive? Chapter 12 introduced the escape hatch: **motion imitation.** Instead of describing a goal, you hand the robot a **reference motion** — a time-indexed recording of the move mapped onto the G1's body through the **retargeting pipeline** (`.pkl` → CSV → `.npz`) — and reward it for matching that recording frame by frame.
 
@@ -79,7 +79,7 @@ The cartwheel did, eventually, work — a real, frame-confirmed sideways inversi
 
 Chapter 13 ran the same paradigm at higher difficulty — a **backflip** — and added one new tool: the **gated reward.** A backflip needs the robot *inverted* in the middle and *upright* at the end — contradictory states no single always-on reward can satisfy. The `landing_feet_upright` term (full source in [`../../backflip-v3/`](../../backflip-v3/)) solves it by switching on *only* in the last 40% of the clip, where "be upright on your feet" finally agrees with the reference. Three attempts: tight thresholds (never leaves the ground) → loose thresholds (airborne, **lands on its back**) → gated landing reward (full inversion, lands on its feet). And the honest result, not sanded smooth: **the backflip lands in a recovering crouch, not a crisp gymnast's stick.** It launches, fully inverts, and comes down on its feet — unmistakably a backflip — but it squats deep to absorb the landing before recovering. That gap is real, and it is named, not hidden.
 
-### Part IV — from-scratch tasks: the reward is the *whole* specification
+### Movement IV — from-scratch tasks: the reward is the *whole* specification
 
 The hardest paradigm came last. **Get-up** (Chapter 14) had no command to follow and no reference to imitate — the robot simply begins lying on the floor, and the only guidance is a reward you write entirely yourself. This is where the thesis reached its widest form, because here the reward is not the *main* lever, it is *almost the only* lever — and the chapter showed that two things you might not even think of as "reward" are just as load-bearing:
 

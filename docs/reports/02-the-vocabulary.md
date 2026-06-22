@@ -33,12 +33,12 @@ An **observation** is the snapshot of numbers the robot reads from the environme
 
 If the environment is the game board, the observation is the robot's senses — everything it is allowed to know about the state of the world right now.
 
-For the G1 walker, one observation is a vector of 47 numbers — here is what they capture:
+For the G1 walker, one observation is a vector of about 50 numbers — here is what they capture (the exact split varies slightly by configuration):
 
 | Group | What it measures | Approximate count |
 |---|---|---|
-| Joint angles | Where each motor is currently pointing | 23 |
-| Joint velocities | How fast each motor is moving | 23 |
+| Joint angles | Where each motor is currently pointing | ~23 |
+| Joint velocities | How fast each motor is moving | ~23 |
 | Body orientation | Which way gravity is pulling relative to the body frame | ~3 |
 | Commanded velocity | The forward speed the robot has been asked to reach | 1+ |
 
@@ -59,7 +59,7 @@ The action does not command acceleration, force, or torque directly. It commands
 The action-observation loop runs at 50 Hz: observation in, action out, physics advances, new observation in — 50 times every simulated second.
 
 > **Insight: the action space is intentionally low-level.**
-> Nobody gave the robot a "take a step" command. The 23-dimensional action is literally a list of where each joint should point. Making that list add up to a walk is the entire problem. This is why 2048 parallel environments and billions of timesteps are necessary: discovering that certain sequences of joint-angle vectors produce locomotion, from a cold start with random numbers, is not a simple search problem.
+> Nobody gave the robot a "take a step" command. The 23-dimensional action is literally a list of where each joint should point. Making that list add up to a walk is the entire problem. This is why 2048 parallel environments and hundreds of millions of timesteps are necessary: discovering that certain sequences of joint-angle vectors produce locomotion, from a cold start with random numbers, is not a simple search problem.
 
 ---
 
@@ -77,7 +77,7 @@ Read that as: "the policy π with weights θ, given observation oₜ at time t, 
 
 In the G1 experiment, the policy is a fully connected neural network with three hidden layers of 512, 256, and 128 units (narrowing as it goes deeper) — roughly 200,000 adjustable weights in total. Before training, all weights are random, so the policy outputs random joint angles and the robot falls immediately. Training's job is to find values of θ that make the policy output good actions.
 
-The policy has no memory of past timesteps (it is called *memoryless* or *Markovian*: the output depends only on the current observation, not the history). Walking turns out to be learnable under this constraint — the current body velocity and joint state carry enough information about what came just before. (One nuance worth knowing is coming: in practice the policy adds a small amount of randomness to its outputs so it can explore different actions and discover better ones — Chapter 03 explains why.)
+The policy has no memory of past timesteps (it is called *memoryless*: it reacts only to the current observation, with no memory of past timesteps). Walking turns out to be learnable under this constraint — the current body velocity and joint state carry enough information about what came just before. (One nuance worth knowing is coming: in practice the policy adds a small amount of randomness to its outputs so it can explore different actions and discover better ones — Chapter 03 explains why.)
 
 > **Insight: the policy is what training is improving.**
 > Every data point collected during practice, every reward signal, every learning update — all of it exists to improve θ. The observation space, action space, and environment are fixed. Only θ changes. When someone says "the robot is learning," what they mean precisely is "θ is being adjusted."
@@ -188,7 +188,7 @@ The thing training is trying to do is simple to say: find the policy weights θ 
 ## What you now understand
 
 - The **environment** is the simulated world that surrounds the robot — it receives actions, enforces physics, and emits observations and rewards.
-- An **observation** is the snapshot of sensor numbers the robot reads each timestep (joint angles, velocities, commanded speed — 47 numbers for the G1 walker).
+- An **observation** is the snapshot of sensor numbers the robot reads each timestep (joint angles, velocities, commanded speed — about 50 numbers for the G1 walker).
 - An **action** is the vector of joint-angle targets the robot outputs (23 numbers, one per motor).
 - The **policy** is the neural network that maps observations to actions; its adjustable weights θ are exactly what training improves.
 - A **reward** is a scalar score emitted after each action — a proxy, always imperfect, for what the designer wants the robot to do.

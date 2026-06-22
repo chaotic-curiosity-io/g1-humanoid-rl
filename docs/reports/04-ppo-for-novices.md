@@ -84,6 +84,8 @@ nudge to θ   ∝   A   ×   (direction in θ that made the taken action more li
 
 Read that against the Chapter 03 version and notice nothing changed *except* that the vague "return earned − expected return" is now a concrete, computed `A`. The rule is identical: when `A` is positive (the action beat its situation's forecast), step θ to make that action more likely; when `A` is negative, step the other way; when `A` ≈ 0, barely move. The advantage just gives the rule a reliable measuring stick instead of a guess.
 
+*In practice PPO doesn't wait for the whole episode to finish — it estimates "the return from here" by adding up the rewards it did see over the rollout (24 steps in this project) and letting the value function forecast the rest. We're showing the simpler full-return version above; the idea is identical.*
+
 > **Insight: why subtract a baseline at all?**
 > Subtracting `V(s)` does not change *which way* the rule pushes on average — it changes how *noisy* the push is. Suppose every action in some easy situation earns a return around 40. Without a baseline, every one of those actions looks "good" (return 40, well above zero), so the rule keeps cranking up *all* of them — a wash, plus a lot of noise. With the baseline, the forecaster already expected ~40, so most of those actions score an advantage near zero and are left alone; only the ones that genuinely beat or missed 40 move the dials. Subtracting "what we expected anyway" strips out the part of the return that was never about the action's quality, leaving a much cleaner signal. Cleaner signal means the algorithm can take *bigger* steps safely — which is exactly the goal we set at the top of this chapter.
 

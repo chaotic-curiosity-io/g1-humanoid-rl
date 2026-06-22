@@ -22,7 +22,7 @@ That is **motion imitation** — a training paradigm where instead of writing do
 
 A **reference motion** is a time-indexed sequence of joint angles — the G1's body position reconstructed at each timestep of a specific movement. Think of it as a very detailed pose recording: "at 0.0 seconds the right knee is at this angle and this position; at 0.1 seconds it is here; at 0.2 seconds it is here." Strung together, these poses trace out a motion through time.
 
-For this project the reference is a 2.73-second MimicKit cartwheel clip — a human gymnast's cartwheel that has been mathematically mapped onto the G1's joints and proportions. The clip runs: standing → crouch and plant hands → one-arm handstand with leg sweeping overhead → airborne inversion → land → stand. Each of these moments is one frame of the reference, and the policy's job is to reproduce all of them in order.
+For this project the reference is about 2.7 seconds of human cartwheel motion from MimicKit, padded with short entry/exit transitions into a ~4.2-second reference clip — a human gymnast's cartwheel that has been mathematically mapped onto the G1's joints and proportions. The clip runs: standing → crouch and plant hands → one-arm handstand with leg sweeping overhead → airborne inversion → land → stand. Each of these moments is one frame of the reference, and the policy's job is to reproduce all of them in order.
 
 The reference is not a video file the robot "watches." It is a structured data file — a `.npz` file — that the simulator reads one timestep at a time and serves to the policy as a target: "here is where your right shoulder joint should be right now; here is where your left ankle should be; here is where your pelvis should be." At every step, the policy receives a reward based on how close it came.
 
@@ -71,7 +71,7 @@ reward = exp(-(error²) / std²)
 
 - `error` — the distance between the robot's current pose and the reference pose at this timestep. Concretely, this is computed over a set of tracked body positions (the pelvis, the end-effectors — hands and feet — and key joint angles). A small `error` means the robot is nearly where the reference says it should be. A large `error` means it has drifted far from the reference.
 
-- `std` — the tolerance: a fixed number set by the designer that controls how quickly the reward decays as `error` grows. A large `std` means the reward falls off gently — the policy can drift quite a bit before losing much reward. A small `std` means the reward is tight — even a small drift costs significantly. For this project `std` is set to match the scale of the tracked positions, so a mismatch of roughly one standard deviation halves the reward.
+- `std` — the tolerance: a fixed number set by the designer that controls how quickly the reward decays as `error` grows. A large `std` means the reward falls off gently — the policy can drift quite a bit before losing much reward. A small `std` means the reward is tight — even a small drift costs significantly. For this project `std` is set to match the scale of the tracked positions, so a mismatch of roughly one standard deviation drops the reward to about a third (e⁻¹ ≈ 0.37 of the maximum).
 
 - `error²` — the squared error. Using the square rather than the raw error makes the penalty grow faster as the robot drifts further. A robot that is twice as far from the reference receives more than twice the penalty. This discourages large drifts more strongly than small ones.
 
@@ -210,4 +210,4 @@ Next: [Chapter 13 — The Backflip in Three Attempts](13-the-backflip-in-three-a
 
 ---
 
-*Unitree G1, flat terrain, MuJoCo-Warp simulator on a DGX Spark. Tracking task: `Mjlab-Tracking-Flat-Unitree-G1`. Reference motion: MimicKit cartwheel retargeted to G1, 2.73 s. IterC: 4096 parallel environments, 20 000 iterations, 0.5 m termination thresholds. Final checkpoint: `model_19999.pt`. Full iteration log: [cartwheel-journey.md](../cartwheel-journey.md).*
+*Unitree G1, flat terrain, MuJoCo-Warp simulator on a DGX Spark. Tracking task: `Mjlab-Tracking-Flat-Unitree-G1`. Reference motion: MimicKit cartwheel retargeted to G1 (~2.7 s of human motion, padded to ~4.2 s total). IterC: 4096 parallel environments, 20 000 iterations, 0.5 m termination thresholds. Final checkpoint: `model_19999.pt`. Full iteration log: [cartwheel-journey.md](../cartwheel-journey.md).*

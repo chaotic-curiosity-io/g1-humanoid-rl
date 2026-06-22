@@ -52,7 +52,7 @@ We use a simulator called **MuJoCo** (short for Multi-Joint dynamics with Contac
 
 ## Parallel environments: thousands of robots at once
 
-Trial-and-error learning requires an enormous amount of experience to work. The robot has to try something, see whether it got a better score, update its strategy, and try again — and it needs to do this *billions* of times before a coherent skill emerges. At real-time speed, on a single robot, this would take months or years.
+Trial-and-error learning requires an enormous amount of experience to work. The robot has to try something, see whether it got a better score, update its strategy, and try again — and it needs to do this *hundreds of millions of times* before a coherent skill emerges. At real-time speed, on a single robot, this would take months or years.
 
 The solution is to run many copies of the robot's simulation simultaneously — each one an independent **parallel environment**, practicing the same task at the same time.
 

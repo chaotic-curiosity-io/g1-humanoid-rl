@@ -81,7 +81,7 @@ The first build of the reset had a bug: half the "fallen" robots actually spawne
 
 **Reward shaping iteration** is one complete cycle of: design a reward, train to convergence, inspect the resulting behavior (on video, not on the number alone), identify the gap between what the reward measured and what you intended, and fix it. Chapters 12 and 13 involved iterative tuning too, but there the tracking reward provided a reference rail and the iterations were about thresholds and gating. Here, *every* reward term comes from scratch — which is why four full iterations were needed.
 
-Each attempt below uses the same `Mjlab-Recovery-Flat-Unitree-G1` task with a different reward specification. The policy is PPO trained on 2048 parallel environments for up to 2500 iterations (~20 hours). The reward config changes are in [`../../recovery-task/config/g1/env_cfgs.py`](../../recovery-task/config/g1/env_cfgs.py).
+Each attempt below uses the same `Mjlab-Recovery-Flat-Unitree-G1` task with a different reward specification. The policy is PPO trained on 2048 parallel environments for up to 2500 iterations (roughly 30–50 minutes per attempt). The reward config changes are in [`../../recovery-task/config/g1/env_cfgs.py`](../../recovery-task/config/g1/env_cfgs.py).
 
 ---
 
@@ -89,7 +89,7 @@ Each attempt below uses the same `Mjlab-Recovery-Flat-Unitree-G1` task with a di
 
 **What changed:** the first reward kept several terms from the velocity walking task — `track_linear_velocity` and `track_angular_velocity` — with the command pinned to zero. The intent was "once you're up, hold still." On top of that, an upright term and a Gaussian height bonus (narrow peak near standing height).
 
-**What happened:** the reward curve climbed to ~62, looking healthy. But the success rate peaked early (~33%) and then *decayed toward zero*. The video showed the robot lying perfectly flat on the ground and not moving.
+**What happened:** the reward curve climbed to ~62, looking healthy. But the success rate *(success rate = the fraction of the parallel robots whose pelvis reached and held the standing height by the end of the episode)* peaked early (~33%) and then *decayed toward zero*. The video showed the robot lying perfectly flat on the ground and not moving.
 
 Here is why. The velocity-tracking rewards score how well the robot matches its commanded velocity. The command is zero — so a robot with zero velocity gets a perfect score on those terms. A robot lying still has close to zero velocity. Therefore **a motionless fallen robot earns near-maximum reward on the velocity terms, every step, without doing anything**.
 
@@ -248,7 +248,7 @@ ssh spark "docker exec mjlab-dev bash -lc 'cd /workspace/mjlab && python -m mjla
 | 3 | full standing too costly vs. its reward | settled in a stable deep squat at ~0.52 m | doubled height weight; cut action-rate penalty |
 | 4 | — | **stands up from all four fallen poses and holds the stand** | — |
 
-None of these failures were bugs in the learning algorithm. PPO found the highest-scoring behavior available under the reward as written — exactly as it was designed to. The failures were in the **specification**: what we measured was not what we meant. Each iteration closed one gap between the two.
+None of these failures were bugs in the learning algorithm. PPO found the highest-scoring behavior available under the reward as written — exactly as it was designed to. The failures were in the **specification**: what we measured was not what we meant. Each iteration closed one gap between the two. (As Chapter 08 established, the reward numbers across attempts — ~62, ~198 — are not directly comparable, because the reward configuration itself changed between iterations.)
 
 ---
 

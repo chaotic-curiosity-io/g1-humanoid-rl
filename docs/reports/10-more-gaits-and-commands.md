@@ -22,7 +22,7 @@ Every timestep, before the robot's brain (the policy neural network) decides wha
 
 Together, this three-number vector is called the **twist command** — a standard term from robotics for the combination of linear and angular motion. Think of it as a tiny remote-control joystick update, delivered fresh every timestep, telling the robot "at this moment, try to be moving like this."
 
-> **Command / twist system** — the interface that sends `(lin_vel_x, lin_vel_y, ang_vel_z)` to the policy each timestep. The policy's brain reads these three numbers as part of its observation and produces joint torques intended to match them. Changing what you put into the twist is how you change the robot's goal behavior without touching the reward function or rewriting any code.
+> **Command / twist system** — the interface that sends `(lin_vel_x, lin_vel_y, ang_vel_z)` to the policy each timestep. The policy's brain reads these three numbers as part of its observation and produces joint position targets intended to match them. Changing what you put into the twist is how you change the robot's goal behavior without touching the reward function or rewriting any code.
 
 The policy does not receive a destination — "go to point B." It receives a *velocity*, and it must maintain that velocity continuously. Keeping a 1 m/s forward velocity for ten seconds requires a thousand consecutive good decisions, each one reading the current command and the current joint state and outputting something that nudges the body in the right direction.
 
@@ -32,7 +32,7 @@ The `track_lin_vel` and `track_ang_vel` reward terms (introduced in [chapter 06]
 
 ## Insight: what the policy observes vs. what the policy controls
 
-The policy network (roughly 200,000 weights, hidden layers 512 → 256 → 128) maps the observation to joint torques. The observation is a list of numbers that includes: the three twist-command values just described, the robot's current joint angles and velocities across its 23 actuated joints, and various body-state estimates (orientation, foot contacts, etc.). The twist command is literally among the numbers the policy reads as its input every single step. Change the command, and the robot reads a different input — the policy naturally steers toward a different target without any retraining, as long as the new command was in the distribution the policy trained on.
+The policy network (roughly 200,000 weights, hidden layers 512 → 256 → 128) maps the observation to target joint angles. The observation is a list of numbers that includes: the three twist-command values just described, the robot's current joint angles and velocities across its 23 actuated joints, and various body-state estimates (orientation, foot contacts, etc.). The twist command is literally among the numbers the policy reads as its input every single step. Change the command, and the robot reads a different input — the policy naturally steers toward a different target without any retraining, as long as the new command was in the distribution the policy trained on.
 
 ---
 

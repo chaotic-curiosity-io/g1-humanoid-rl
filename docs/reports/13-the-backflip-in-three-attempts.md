@@ -131,6 +131,8 @@ feet_down_per = clamp( (0.12 + 0.15 − foot_height) / 0.15,  0,  1 )
 
 Averaged over the left and right ankle links. The tracking scene has no contact sensors (adding one would require changing shared infrastructure), so foot height is used as a proxy. The math is purely bounded clamps and averages — no divisions by learned quantities, no unbounded exponentials, so the term can never produce a `NaN` or infinity, and is safe to leave registered at weight 0.0 when not in use.
 
+*You don't need to read code to follow this — the plain-language version above says it all. For the curious, here is the actual reward function we wrote:*
+
 The full function:
 
 ```python
