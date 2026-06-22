@@ -69,9 +69,11 @@ The **policy** is the function — implemented as a neural network — that maps
 
 Formally, the policy takes in the current observation and outputs an action:
 
-$$\pi_\theta(o_t) = a_t$$
+```
+policy π_θ : observation oₜ → action aₜ
+```
 
-Read that as: "the policy π with weights θ, given observation $o_t$ at time $t$, produces action $a_t$." The subscript θ (theta) just names the internal numbers (weights) of the neural network. When training adjusts the policy, it is adjusting θ.
+Read that as: "the policy π with weights θ, given observation oₜ at time t, produces action aₜ." The subscript θ (theta) just names the internal numbers (weights) of the neural network. When training adjusts the policy, it is adjusting θ.
 
 In the G1 experiment, the policy is a fully connected neural network with two hidden layers of 512 units each — about 800,000 adjustable weights in total. Before training, all weights are random, so the policy outputs random joint angles and the robot falls immediately. Training's job is to find values of θ that make the policy output good actions.
 
@@ -125,9 +127,9 @@ A **rollout** is a batch of experience collected by running the current policy f
 
 Every time the learning algorithm runs the policy to gather data, it is collecting a rollout. A rollout contains, for each timestep in each environment, four things:
 
-- The observation the robot saw: $o_t$
-- The action the policy chose: $a_t$
-- The reward it received: $r_t$
+- The observation the robot saw: `oₜ`
+- The action the policy chose: `aₜ`
+- The reward it received: `rₜ`
 - Whether the episode ended: a boolean "done" flag
 
 In the G1 experiment, one rollout covers **24 timesteps × 2048 environments = 49,152 transitions**. That is the unit of experience the learning algorithm gets to work with before updating the policy.
@@ -144,13 +146,17 @@ If a rollout is a batch of experience, the return is the answer to the question 
 
 The simplest version is just the sum of all per-timestep rewards:
 
-$$G_t = r_t + r_{t+1} + r_{t+2} + \ldots + r_T$$
+```
+return = r₀ + r₁ + r₂ + … + rₜ
+```
 
 In practice, we use a *discounted* return: rewards earned further in the future count slightly less than rewards earned now. The discount factor is written γ (gamma) and is typically set close to 1 (for example, γ = 0.99):
 
-$$G_t = r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \ldots$$
+```
+return = r₀ + γ·r₁ + γ²·r₂ + γ³·r₃ + …
+```
 
-Read each term as: the reward at the *k*-th step in the future is multiplied by γ^k, which shrinks toward zero as k grows. A reward 100 steps away contributes γ^100 ≈ 0.366 of what it would at γ = 1.00 — present rewards are weighted more heavily than distant ones.
+Read each term as: the reward at the k-th step in the future is multiplied by γᵏ, which shrinks toward zero as k grows. A reward 100 steps away contributes γ¹⁰⁰ ≈ 0.366 of what it would at γ = 1.00 — present rewards are weighted more heavily than distant ones.
 
 Why discount? Two reasons. Practically, it prevents returns from growing unbounded in long episodes. Conceptually, it captures the idea that a reward you earn sooner is more certain than one you might earn in a future that may not arrive (the episode might end early).
 
