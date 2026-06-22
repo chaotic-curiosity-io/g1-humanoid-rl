@@ -162,7 +162,7 @@ ssh spark "docker exec mjlab-dev bash -lc 'cat /workspace/mjlab/logs/rsl_rl/g1_v
 
 If the `lin_vel_x` range still shows `(-1.0, 1.0)`, the curriculum clobber is still active and the override did not take effect.
 
-**Important:** the exact YAML paths for the three curriculum-stage overrides (`velocity-stages.0`, `velocity-stages.1`, `velocity-stages.2`) are confirmed by reading the live env config on the Spark. The paths above match what CLAUDE.md documents; verify against `params/env.yaml` before a long run.
+**Important:** the exact YAML paths for the three curriculum-stage overrides (`velocity-stages.0`, `velocity-stages.1`, `velocity-stages.2`) should be confirmed by reading the live env config on the Spark — verify against `params/env.yaml` before a long run.
 
 ### The terrain curriculum (`Mjlab-Velocity-Rough-Unitree-G1`)
 

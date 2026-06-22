@@ -43,7 +43,6 @@ scripts/
   record_learning_progression.py — multi-checkpoint, multi-camera progression recorder (stitches one MP4 per angle + optional 2×2 grid from N evenly-spaced checkpoints)
   watch_learning.py          — host-side helper that loads 8 checkpoints into one 1024-env Viser scene, routing each 128-env block to a different policy
   plot_training_curves.py    — tensorboard training scalars → CSV + curve PNGs; overlays multiple runs for comparison (used by the docs/reports series)
-CLAUDE.md                    — project conventions and gotchas for any Claude Code session working in this tree
 setup-notes.md               — append-as-we-go log of actual setup deviations per session
 .gitignore                   — keeps secrets, checkpoints, caches, and downloaded datasets out of the repo
 ```

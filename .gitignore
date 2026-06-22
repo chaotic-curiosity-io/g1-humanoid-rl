@@ -38,6 +38,9 @@ pose-pipeline/.venv/
 Pasted image*.png
 Screenshot*.png
 
+# Local Claude Code project guide (kept local; contains host/infra details, not for the public repo)
+/CLAUDE.md
+
 # Editor
 .vscode/
 .idea/
