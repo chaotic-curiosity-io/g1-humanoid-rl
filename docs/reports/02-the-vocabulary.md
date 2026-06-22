@@ -75,7 +75,7 @@ policy π_θ : observation oₜ → action aₜ
 
 Read that as: "the policy π with weights θ, given observation oₜ at time t, produces action aₜ." The subscript θ (theta) just names the internal numbers (weights) of the neural network. When training adjusts the policy, it is adjusting θ.
 
-In the G1 experiment, the policy is a fully connected neural network with two hidden layers of 512 units each — about 800,000 adjustable weights in total. Before training, all weights are random, so the policy outputs random joint angles and the robot falls immediately. Training's job is to find values of θ that make the policy output good actions.
+In the G1 experiment, the policy is a fully connected neural network with three hidden layers of 512, 256, and 128 units (narrowing as it goes deeper) — roughly 200,000 adjustable weights in total. Before training, all weights are random, so the policy outputs random joint angles and the robot falls immediately. Training's job is to find values of θ that make the policy output good actions.
 
 The policy has no memory of past timesteps (it is called *memoryless* or *Markovian*: the output depends only on the current observation, not the history). Walking turns out to be learnable under this constraint — the current body velocity and joint state carry enough information about what came just before.
 
