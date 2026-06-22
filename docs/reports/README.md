@@ -83,7 +83,7 @@ just a reward you design from scratch for a behavior the robot has never seen.
 
 | Chapter | Hook |
 |---|---|
-| [Chapter 14 — Building Get-Up from Scratch](14-building-get-up-from-scratch.md) | Four reward iterations — each fixing a distinct hack (stillness, success-termination, stable crouch, arm tuck) — to teach the robot to stand up from any fallen pose. |
+| [Chapter 14 — Building Get-Up from Scratch](14-building-get-up-from-scratch.md) | Four reward iterations — fixing a stillness hack, then a success-termination trap, then a stable-crouch local optimum, then finally a full stand — to teach the robot to stand up from any fallen pose. |
 
 ---
 
