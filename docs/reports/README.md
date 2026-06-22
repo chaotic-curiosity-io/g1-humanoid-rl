@@ -1,113 +1,121 @@
-# G1 Humanoid RL — Learning Series Syllabus
+# G1 Humanoid RL — Learning Series
 
-A growing collection of short reports that take a reader with **no robotics or
-machine-learning background** from "what is this?" to running, imitating, and
-engineering their own humanoid RL experiments. Every term is defined on first use;
-each report is standalone and re-runnable from this checkout + the Spark.
-
-The series is organized around a **Foundations primer** (shared vocabulary every
-track builds on) and **four paradigm tracks** — the four ways this repo teaches a
-robot to do something:
-
-- **Locomotion** — shape a reward from scratch; the gait is emergent.
-- **Imitation** — track a reference motion each step.
-- **From-scratch tasks** — no reference, no command; behavior is 100% the reward
-  terms you write.
-- **Reward engineering** (cross-cutting) — understand and control what the reward
-  actually incentivizes.
+A fifteen-chapter curriculum that takes a reader with **no robotics or
+machine-learning background** from "what is a simulator?" to a humanoid robot
+teaching itself to do a cartwheel and a backflip. Every term is defined the
+first time it appears. **Read the chapters in order** — each one builds on the
+concepts the previous one introduced, and the series is designed as one
+cohesive arc, not a collection of standalone reports.
 
 ---
 
-## Foundations
+## Part I — What is this even?
 
-The keystone vocabulary every track builds on. Start here.
+The first two chapters answer the questions a newcomer brings before anything
+else can land: what kind of project is this, and what are the eight words I
+need to know before I read further?
 
-| Report | Hook |
+| Chapter | Hook |
 |---|---|
-| [00 — Primer](00-primer.md) | What a simulator, policy, reward, episode, and PPO are — and why thousands of robots train in parallel. |
+| [Chapter 1 — The Big Picture](01-the-big-picture.md) | A human-shaped robot taught itself to walk inside a computer, with no rules about how to move — here is why that is interesting and how it is possible. |
+| [Chapter 2 — The Vocabulary](02-the-vocabulary.md) | The eight precise terms — environment, observation, action, policy, reward, episode, rollout, return — that let us talk about the practice loop without hand-waving. |
 
 ---
 
-## Locomotion
+## Part II — How learning actually works
 
-Shape a velocity reward from scratch; the gait emerges from the numbers.
+Three chapters on the engine under the hood: why trial and error can produce a
+skill from nothing, how PPO turns that into a practical algorithm, and how to
+read the numbers a training run produces.
 
-| Report | Hook |
+| Chapter | Hook |
 |---|---|
-| [01 — Watching it learn](01-watching-it-learn.md) | The robot goes from random flailing to walking, shown frame by frame; how to read a reward curve. |
-| [02 — Reproducing the benchmark](02-reproducing-the-benchmark.md) | We re-ran training from scratch and got the same curve — evidence the result is real, not luck — and unpack what the robot is actually rewarded for. |
-| [03 — Turning the knobs](03-turning-the-knobs.md) | A one-change experiment (slow vs. full speed range), the lesson that *higher reward ≠ better robot*, and a menu of settings you can explore. |
-| [Running and flight phase](running-and-flight.md) | Rewarding "air time" to force a flight phase backfires into a reward-hacked dive — the highest-scoring policy is the worst gait. A live reward-hacking result. |
-| [More gaits](more-gaits.md) | Promoting two deferred Tier-1 specs to trained policies — a first-try spin-in-place and a scrappier backward walk — showing the command-override technique and that "just a command change" doesn't guarantee equal quality. |
+| [Chapter 3 — Trial and Error Made Precise](03-trial-and-error.md) | The single idea that turns thousands of falling robots into a walking one: nudge toward actions that earned more than expected, away from those that didn't — and repeat. |
+| [Chapter 4 — PPO for Novices](04-ppo-for-novices.md) | The algorithm this project actually trains with: why a raw policy-gradient step over-corrects, how the value function gives it a baseline, and how clipping keeps the updates stable. |
+| [Chapter 5 — Reading the Training](05-reading-the-training.md) | How to pick up a reward curve you have never seen before and answer the two questions that matter: is learning healthy, and is the number going up actually measuring what you think? |
 
 ---
 
-## Imitation
+## Part III — First real skill: walking
 
-Give the robot a reference motion to match each step, and watch it learn the
-move from frame-level feedback.
+Three chapters on the concrete experiment: watch the robot go from flailing to
+walking, verify the result is reproducible, then run your first controlled
+experiment by pulling one knob.
 
-| Report | Hook |
+| Chapter | Hook |
 |---|---|
-| [Imitation — cartwheel](imitation-cartwheel.md) | The successful acrobatic: a real, frame-confirmed cartwheel, plus the three hard-won lessons (and the scorer that lied). Links the full log in [`../cartwheel-journey.md`](../cartwheel-journey.md). |
-| [Imitation — backflip](imitation-backflip.md) | Three attempts to a landed backflip: tight thresholds (grounded) → loose thresholds (airborne, lands on its back) → a targeted landing reward (full inversion, lands on its feet). Each fixes one diagnosed deficit. |
+| [Chapter 6 — Watching It Walk](06-watching-it-walk.md) | The walking training run replayed frame by frame — from random collapse to smooth velocity tracking — and what the task actually asked the robot to do. |
+| [Chapter 7 — Proving It's Real](07-proving-its-real.md) | Run the same training from scratch, get the same curve, then decompose the reward into its component terms to see what each one contributed: the reproducibility argument. |
+| [Chapter 8 — Turning the Knobs](08-turning-the-knobs.md) | A one-change experiment (slow vs. full speed range) and the lesson that higher reward does not mean a better robot — plus a controlled-experiment discipline you will use for the rest of the series. |
 
 ---
 
-## From-scratch tasks
+## Part IV — Reward engineering
 
-No reference motion, no velocity command: the robot's behavior is entirely
-determined by the reward terms you write.
+Three chapters that show, with live failures from this project, what happens
+when the reward measures a proxy for the behavior you want rather than the
+behavior itself.
 
-| Report | Hook |
+| Chapter | Hook |
 |---|---|
-| [Getting up](getting-up.md) | A brand-new task built from scratch: the robot learns to stand up from fallen poses — but only after **four** reward iterations, each fixing a distinct reward hack (stillness, success-termination, stable crouch). Ends in a full stand. |
+| [Chapter 9 — The Running Dive](09-the-running-dive.md) | Rewarding "air time" to force a flight phase backfires: the highest-scoring policy is a forward dive — the reward was telling the truth, but not the truth we wanted. |
+| [Chapter 10 — More Gaits and the Command System](10-more-gaits-and-commands.md) | The robot's velocity command is a three-number vector, not just "go forward" — spin-in-place works on the first try; backward walking does not; the gap between them reveals a real limit. |
+| [Chapter 11 — The Reward-Hacking Gallery](11-the-reward-hacking-gallery.md) | Three real failure modes from this project — proxy gaming (the dive), silent compensation (no-upright), and metric lying (the cartwheel scorer) — and why "the reward misled us" has more than one flavor. |
 
 ---
 
-## Reward engineering
+## Part V — Imitation
 
-Understand and deliberately control what a reward actually incentivizes.
+Two chapters on a completely different training paradigm: instead of writing
+reward terms, show the robot a recording and reward it for matching each frame.
 
-| Report | Hook |
+| Chapter | Hook |
 |---|---|
-| [Reward-hacking gallery](reward-hacking-gallery.md) | A taxonomy of three real failure modes from this project's own runs — proxy gaming (the dive), silent compensation (no-upright), and a lying metric (the cartwheel scorer); the capstone that "reward design *is* the job." |
-| [Methods and techniques reference](methods-reference.md) | One lookup surface for the full toolkit: reward terms, terminations, the retargeting pipeline, curricula, recording gotchas, helper scripts, and ops/safety. |
+| [Chapter 12 — Imitation and the Cartwheel](12-imitation-and-the-cartwheel.md) | Show the robot a real cartwheel, reward it for matching each frame, and watch it learn the move — plus the three hard-won lessons about termination thresholds and the scorer that lied. |
+| [Chapter 13 — The Backflip in Three Attempts](13-the-backflip-in-three-attempts.md) | Three training runs, each fixing one diagnosed deficit: too-tight thresholds (grounded), too-loose thresholds (airborne but lands on its back), then a targeted landing reward that finally sticks the feet. |
 
 ---
 
-## Ready-to-run (specs, not yet trained)
+## Part VI — Building a task from nothing
 
-These candidate tasks have complete specs — enough to run without re-designing —
-but have not yet been trained. They are grouped by tier and can be promoted to
-full training campaigns as follow-ons.
+One chapter on the hardest paradigm: no reference motion, no velocity command,
+just a reward you design from scratch for a behavior the robot has never seen.
 
-| Tier | Bundle | What's inside |
-|---|---|---|
-| Tier 1 — Gait tweaks | [Compact spec](../superpowers/specs/2026-06-19-tier1-gait-tweaks-compact.md) | Crouched "Groucho" walk, tiptoe, energy-efficiency, spin-in-place, prescribed gait (hop/march), backward/sideways. All on the existing velocity env; no new mjlab code. |
-| Tier 2 — Acrobatics | [Compact spec](../superpowers/specs/2026-06-19-tier2-acrobatics-compact.md) | Spinkick/martial-arts, jump, dance. All via the existing tracking env and retargeting pipeline; no new code. |
-| Tier 3 — From-scratch tasks | [Compact spec](../superpowers/specs/2026-06-19-tier3-tasks-compact.md) | Push-recovery, single-leg (flamingo) balance. Both require a new mjlab task + reward manager. |
-| Tier 4 — Object / whole-body (spec-only) | [Compact spec](../superpowers/specs/2026-06-19-tier4-objects-compact.md) | Reach-to-target, kick-a-ball, carry. Highest research risk; spec-only in this program — MJCF scene edits + new rewards required. |
+| Chapter | Hook |
+|---|---|
+| [Chapter 14 — Building Get-Up from Scratch](14-building-get-up-from-scratch.md) | Four reward iterations — each fixing a distinct hack (stillness, success-termination, stable crouch, arm tuck) — to teach the robot to stand up from any fallen pose. |
+
+---
+
+## Part VII — Synthesis
+
+The capstone chapter names the single principle every previous chapter was
+circling, and shows why it is a discipline, not a trick.
+
+| Chapter | Hook |
+|---|---|
+| [Chapter 15 — Reward Engineering as Craft](15-reward-engineering-as-craft.md) | Strip fourteen chapters down to one sentence: reinforcement learning is reward engineering — the robot does exactly what you reward, not what you meant — and that sentence is the whole job. |
+
+---
+
+## Appendices
+
+Reference material and deep logs for readers who want to go further.
+
+| | |
+|---|---|
+| [Methods and techniques reference](methods-reference.md) | One lookup surface for the full toolkit: reward terms, terminations, the retargeting pipeline, curricula, recording gotchas, helper scripts, and ops notes. |
+| [Cartwheel journey](../cartwheel-journey.md) | The full iteration-by-iteration log of the cartwheel training campaign — every attempt, every failure mode, every fix — for readers who want the unabridged story behind Chapter 12. |
 
 ---
 
 ## Media
 
-Plots, frame stills, **and the videos** are committed under [`assets/`](assets) and
-embedded directly in the reports: the learning progression (chase / side / 2×2 grid)
-in report 01, and the A/B gait clips in report 03. The repo's `.gitignore` blanket-
-ignores `**/*.mp4` but explicitly re-includes `docs/reports/assets/*.mp4` so these
-publish to the Pages site while training-run videos elsewhere stay out of git. The
-source clips live on the training host under `~/robotic-simulation/out/arc/`; each
-report shows the command to re-generate them.
-
-## How these were produced
-
-- The curve plots come from `scripts/plot_training_curves.py` (tensorboard → PNG).
-- Full method and decisions for the walking arc: the design spec
-  [`2026-06-18-g1-walking-learning-arc-design.md`](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-18-g1-walking-learning-arc-design.md)
-  and the implementation plan
-  [`2026-06-18-g1-walking-learning-arc.md`](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/plans/2026-06-18-g1-walking-learning-arc.md).
-- The skills curriculum extension (this syllabus and all new reports) follows the
-  master spec
-  [`2026-06-19-g1-skills-curriculum-master.md`](https://github.com/chaotic-curiosity-io/g1-humanoid-rl/blob/main/docs/superpowers/specs/2026-06-19-g1-skills-curriculum-master.md).
+Plots, frame stills, and videos are embedded throughout the chapters and
+committed under [`assets/`](assets). The repo's `.gitignore` blanket-ignores
+`**/*.mp4` but explicitly re-includes `docs/reports/assets/*.mp4` so these
+publish to the Pages site while training-run videos elsewhere stay out of git.
+The source clips live on the training host under
+`~/robotic-simulation/out/arc/`; each chapter that embeds a clip shows the
+command to re-generate it. Curve plots come from
+`scripts/plot_training_curves.py` (tensorboard scalars → PNG).
