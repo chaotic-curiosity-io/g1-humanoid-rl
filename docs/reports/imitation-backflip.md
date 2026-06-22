@@ -1,14 +1,22 @@
-# Imitation Learning: Teaching G1 to Backflip (a partial success)
+# Imitation Learning: Teaching G1 to Backflip (in three attempts)
 
-*This report is the Imitation track's spine task. It builds on [imitation-cartwheel.md](imitation-cartwheel.md), which introduces motion imitation and the cartwheel campaign's hard-won lessons. Terms like [policy](00-primer.md), [reward](00-primer.md), and [episode](00-primer.md) are in [00-primer.md](00-primer.md). Unlike the other three spine reports, this one ends on an **honest partial result** — and that, too, is a real and useful outcome.*
+*This report is the Imitation track's spine task. It builds on [imitation-cartwheel.md](imitation-cartwheel.md), which introduces motion imitation and the cartwheel campaign's hard-won lessons. Terms like [policy](00-primer.md), [reward](00-primer.md), and [episode](00-primer.md) are in [00-primer.md](00-primer.md). This is the longest road in the series — **three full training attempts**, each diagnosing and fixing a specific failure of the one before, ending in a landed backflip.*
 
 ---
 
 ## What you are about to see
 
-A backflip is the hardest motion in this series: it needs a genuine **airborne phase**, a full **backward rotation** through inversion, *and* a stable **landing on the feet**. In motion imitation, the policy isn't rewarded for any of those in the abstract — it's rewarded for one thing only: making the robot's body match a pre-recorded reference backflip, frame by frame. If it matches closely all the way through, a backflip emerges. If it drifts too far from the reference, the episode ends.
+A backflip is the hardest motion in this series: it needs a genuine **airborne phase**, a full **backward rotation** through inversion, *and* a stable **landing on the feet**. In motion imitation, the policy isn't rewarded for any of those in the abstract — it's rewarded for matching a pre-recorded reference backflip, frame by frame. If it matches closely all the way through, a backflip emerges. If it drifts too far from the reference, the episode ends.
 
-We ran two full training attempts (~11 hours each). The first never left the ground. The second — after a diagnosed fix — **gets airborne and rotates**, but does not yet land the flip on its feet. This report documents both, because the *diagnosis between them* is the real lesson, and because knowing how to read "genuine progress, not yet solved" is itself a skill.
+Three full training attempts (~11 hours each) got us there:
+
+| Attempt | The fix | Result |
+|---|---|---|
+| **v1** | cartwheel's tight thresholds (0.5 m / 0.8 rad) | **never leaves the ground** |
+| **v2** | loosen thresholds (1.0 / 1.5) so episodes survive the air | **gets airborne, rotates — but lands on its back** |
+| **v3** | add an explicit landing reward (feet-down + upright) | **full inversion, lands on its feet** ✓ |
+
+The arc is the lesson: each attempt fixed exactly one diagnosed deficit, and "match the reference" alone was not enough — the takeoff, the survival-in-air, and the landing each had to be earned separately.
 
 ---
 
@@ -84,37 +92,62 @@ The end-effector terminations confirm it:
 
 v2 (orange) terminates consistently less than v1 (blue) — ~105 vs ~175 per rollout window, and still falling at the end — because its episodes survive deeper into the flip instead of being cut at takeoff.
 
+But v2 still lands on its back. Watching it frame by frame, the diagnosis is clean: the tracking reward pays for *matching the reference pose*, but **nothing specifically rewards ending on the feet** — so a partway rotation that crashes onto the back scores nearly as well as a clean landing. The optimiser had no reason to prefer feet-first.
+
 ---
 
-## The honest verdict
+## Attempt 3 — add a landing reward: it lands
 
-Across every render of the final v2 policy (frame-by-frame, multiple angles — the visual gate, never the score), the result is consistent: **the robot performs a genuine backward airborne rotation but does not land it on its feet.** It is a partial backflip.
+The fix is a new reward term, `landing_feet_upright`, that pays for **feet-on-the-ground + torso-upright**, but only in the **last 40% of the motion** (the landing window) so it doesn't fight the inverted mid-flip. It's the same shaping insight that took the [get-up task](getting-up.md) from a stable crouch to a full stand: when a specific phase of the behaviour is missing, give it its own explicit reward.
 
-That is a real, hard-won step:
+```bash
+  --env.rewards.landing-feet-upright.weight 5.0   # added on top of v2's loosened thresholds
+```
 
-| Attempt | Thresholds | Behaviour |
+*(The term ships off by default — weight 0 — so it leaves the cartwheel and every other tracking use untouched; it's switched on only for this run.)*
+
+The result is a real, landed backflip. Takeoff, **full aerial inversion (the robot goes upside-down)**, rotation, and a feet-first landing it recovers to standing from:
+
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s2_v3_landed_still.png">
+  <source src="assets/s2_v3_landed_side.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s2_v3_landed_side.mp4">download the clip</a> instead.
+</video>
+
+<video controls autoplay loop muted playsinline preload="auto" width="100%" poster="assets/s2_v3_landed_still.png">
+  <source src="assets/s2_v3_landed_chase.mp4" type="video/mp4">
+  Your browser doesn't support embedded video — <a href="assets/s2_v3_landed_chase.mp4">download the clip</a> instead.
+</video>
+
+Two things in the metrics confirm what the video shows. The landing reward **climbed steadily and held** (it rises only when the robot actually ends feet-down and upright) — and, tellingly, the body-tracking error **dropped to ~0.43** (v2 was stuck at ~0.63). Better full-motion tracking *and* a high landing reward together is the signature of a flip that's completed and landed, not bailed.
+
+---
+
+## The verdict
+
+**v3 lands the backflip** — confirmed frame by frame from two angles (the visual gate, never the score). The honest nuance: the landing is a *recovering crouch* — the robot comes down on its feet and stays upright, but it's a controlled stumble-to-stand, not a crisp gymnast's stick. It is unmistakably a backflip: it launches, fully inverts in the air, and lands on its feet.
+
+The three-attempt arc is the whole lesson in one task:
+
+| Attempt | Change | Behaviour |
 |---|---|---|
-| v1 | 0.5 / 0.8 / 0.5 (tight) | winds up, **never leaves the ground** |
-| v2 | 1.0 / 1.5 / 1.0 (loose) | **launches and rotates in the air**, lands on its back |
+| v1 | tight thresholds | winds up, never leaves the ground |
+| v2 | loosen thresholds | launches and rotates, lands on its back |
+| v3 | + landing reward | **full inversion, lands on its feet** |
 
-And it's an honest place to stop and report, for a reason worth internalising: **not every skill is solved within the training budget you give it, and recognising "genuine progress, short of the goal" is part of the craft.** The backflip is simply harder than the cartwheel (the cartwheel itself needed three reference/threshold iterations) — full inversion plus a feet-first landing is a tall order, and two ~11-hour runs got it airborne but not landed.
-
-### What a v3 would change
-
-The diagnosis points cleanly at the next lever. The tracking reward pays for *matching the reference pose* — but nothing **specifically rewards ending on the feet**, so a partway rotation that crashes onto the back scores nearly as well as a clean landing. A v3 would add an explicit **landing term** (reward feet-down + upright in the final phase of the motion), exactly the way the [get-up task](getting-up.md) needed an explicit "hold the stand" reward to stop settling for a crouch. It may also need more iterations, or a reference whose landing is emphasised. Each attempt is another ~11-hour run — so this is a deliberate next-session decision, not an automatic one.
+"Match the reference" was never a single switch. The takeoff needed loose enough termination to survive; the landing needed its own explicit reward. Each attempt isolated and fixed exactly one missing piece — the same iterative, watch-the-video, fix-one-thing discipline that runs through every report in this series.
 
 ---
 
 ## Tweak this to explore
 
-**Add a landing reward.** The clearest next experiment: a reward term active in the last ~0.3 s of the motion that pays for feet-on-ground + torso-upright. This is the missing incentive — the same shaping insight that took [get-up](getting-up.md) from a stable crouch to a full stand.
+**Sharpen the landing.** v3 lands in a recovering crouch. Raise the `landing_feet_upright` weight (try 8–10) or extend its gate window, and see whether the landing tightens toward a crisp stick — or whether the robot starts bailing the rotation early to grab the landing reward sooner (a classic over-weighting failure).
 
-**Sweep the thresholds further.** v1→v2 was 0.5→1.0. Does 1.5 help the rotation complete, or does it just let the policy drift sloppily? There's a sweet spot between "cut off too early" and "no discipline at all."
+**Sweep the thresholds.** v1→v2 was 0.5→1.0. With the landing reward now in place, does an even looser threshold help the rotation complete more reliably, or just invite sloppy tracking? There's a sweet spot between "cut off too early" and "no discipline at all."
 
-**Inspect the reference's landing.** Play `smpl_backflip_to_g1.npz` frame by frame (`play_motion_npz.py`) and check the *landing* portion specifically — if the reference's own landing is brief or awkward, the policy has little to imitate there.
+**Inspect the reference's landing.** Play `smpl_backflip_to_g1.npz` frame by frame (`play_motion_npz.py`) and check the *landing* portion — a reference with a clean, deliberate landing gives the policy more to imitate there.
 
-**Compare to the cartwheel.** The [cartwheel](imitation-cartwheel.md) *did* complete (sideways rotation, lower height) on the same task and pipeline. Rendering both side by side shows exactly why backward-and-up is the harder of the two.
+**Compare to the cartwheel.** The [cartwheel](imitation-cartwheel.md) completed on the same task and pipeline with no landing reward at all (sideways rotation, lower height). Rendering both side by side shows exactly why backward-and-up needed three attempts where sideways needed one.
 
 ---
 
-*Unitree G1 on flat terrain, MuJoCo-Warp on a DGX Spark (NVIDIA GB10, aarch64). Motion-tracking task, single backflip reference, 4096 parallel robots, 20000 iterations per attempt; the variable between attempts is the termination-threshold set. The spec for this run: [2026-06-19-spine-backflip.md](../superpowers/specs/2026-06-19-spine-backflip.md).*
+*Unitree G1 on flat terrain, MuJoCo-Warp on a DGX Spark (NVIDIA GB10, aarch64). Motion-tracking task, single backflip reference, 4096 parallel robots, 20000 iterations per attempt. v1→v2 changed the termination thresholds; v3 added the `landing_feet_upright` reward (committed under [`backflip-v3/`](../../backflip-v3/)). The spec for this run: [2026-06-19-spine-backflip.md](../superpowers/specs/2026-06-19-spine-backflip.md).*

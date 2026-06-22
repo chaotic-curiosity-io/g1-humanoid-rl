@@ -50,7 +50,7 @@ move from frame-level feedback.
 | Report | Hook |
 |---|---|
 | [Imitation — cartwheel](imitation-cartwheel.md) | The successful acrobatic: a real, frame-confirmed cartwheel, plus the three hard-won lessons (and the scorer that lied). Links the full log in [`../cartwheel-journey.md`](../cartwheel-journey.md). |
-| [Imitation — backflip](imitation-backflip.md) | An honest partial: loosening the termination thresholds moves the robot from never-leaving-the-ground to a real airborne rotation — short of a landed flip. How to read genuine-but-incomplete progress. |
+| [Imitation — backflip](imitation-backflip.md) | Three attempts to a landed backflip: tight thresholds (grounded) → loose thresholds (airborne, lands on its back) → a targeted landing reward (full inversion, lands on its feet). Each fixes one diagnosed deficit. |
 
 ---
 
